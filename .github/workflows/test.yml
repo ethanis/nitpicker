@@ -1,4 +1,4 @@
-name: "Test typescript-action"
+name: 'Test typescript-action'
 on:
   pull_request:
   push:
@@ -10,11 +10,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
+      - uses: actions/checkout@v1
 
-    - run: npm ci
-    - run: npm run build
-    - run: npm test
-    - uses: ./
-      with: 
-        milliseconds: 1000
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test
+      - uses: ./
+        with:
+          milliseconds: 1000
