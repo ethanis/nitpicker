@@ -5,6 +5,8 @@ inputs:
   nitpickerFile:
     description: 'Path to nitpicker config file'
     default: './.github/nitpicker.yml'
+  token:
+    description: 'The GITHUB_TOKEN secret'
 runs:
   using: 'node12'
   main: 'lib/main.js'
