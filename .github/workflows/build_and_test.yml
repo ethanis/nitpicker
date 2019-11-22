@@ -1,4 +1,4 @@
-name: 'Test typescript-action'
+name: 'Build and test nitpicker'
 on:
   pull_request:
   push:
@@ -17,5 +17,3 @@ jobs:
       - run: npm run build
       - run: npm test
       - uses: ./
-        with:
-          milliseconds: 1000
