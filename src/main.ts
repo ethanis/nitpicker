@@ -21,17 +21,7 @@ async function run() {
 
     const token = core.getInput('token');
     const octokit = new github.GitHub(token);
-
     const eventName = process.env.GITHUB_EVENT_NAME;
-    console.log(eventName);
-
-    const eventFile = process.env.GITHUB_EVENT_PATH;
-    console.log(eventFile);
-
-    if (eventFile) {
-      const contents = fs.readFileSync(eventFile, 'utf8');
-      console.log(contents);
-    }
 
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
 
