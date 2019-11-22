@@ -22,11 +22,13 @@ async function getChangedFilesFromSha(
 ): Promise<string[]> {
   const beforeSha = github.context.payload.before;
   const afterSha = github.context.payload.after;
-  const owner = github.context.payload.owner?.owner?.name;
+  const owner = github.context.payload.repository?.owner?.name;
   const repo = github.context.payload.repository?.name;
 
   console.log('Before', beforeSha);
   console.log('After', afterSha);
+  console.log('Owner', owner);
+  console.log('Repo', repo);
 
   if (!beforeSha || !afterSha || !repo || !owner) {
     return [];

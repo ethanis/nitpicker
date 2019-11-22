@@ -1,5 +1,4 @@
 import * as core from '@actions/core';
-import * as fs from 'fs';
 import * as github from '@actions/github';
 import { getChangedFiles } from './services/changes';
 import { getConfiguredComments } from './services';
