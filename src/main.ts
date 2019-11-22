@@ -33,7 +33,9 @@ async function run() {
       console.log(contents);
     }
 
-    // const changedFiles: string[] = await getChangedFiles(octokit, eventName);
+    const changedFiles: string[] = await getChangedFiles(octokit, eventName);
+
+    console.log(`Found ${changedFiles.length} files`);
 
     core.setOutput('time', new Date().toTimeString());
   } catch (error) {
