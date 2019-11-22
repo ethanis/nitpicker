@@ -38,9 +38,9 @@ async function getChangedFilesFromSha(
 
   const changedFiles = listFilesResponse.data.files.map(f => f.filename);
 
-  console.log('found changed files:');
+  core.debug('found changed files:');
   for (const file of changedFiles) {
-    console.log('  ' + file);
+    core.debug('  ' + file);
   }
 
   return changedFiles;
@@ -62,9 +62,9 @@ async function getChangedFilesFromPR(
 
   const changedFiles = listFilesResponse.data.map(f => f.filename);
 
-  console.log('found changed files:');
+  core.debug('found changed files:');
   for (const file of changedFiles) {
-    console.log('  ' + file);
+    core.debug('  ' + file);
   }
 
   return changedFiles;
