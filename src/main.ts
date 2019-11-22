@@ -1,14 +1,15 @@
 import * as core from '@actions/core';
-import { wait } from './wait';
+import { promises as fs } from 'fs';
 
 async function run() {
   try {
-    const ms = core.getInput('milliseconds');
-    console.log(`Waiting ${ms} milliseconds ...`);
+    const nitpickerFile = core.getInput('nitpickerFile');
+    console.log(`Nitpicker file: ${nitpickerFile}`);
 
-    core.debug(new Date().toTimeString());
-    await wait(parseInt(ms, 10));
-    core.debug(new Date().toTimeString());
+    const contents = await fs.readFile(nitpickerFile);
+
+    console.log('Nitpicker file contents:');
+    console.log(contents);
 
     core.setOutput('time', new Date().toTimeString());
   } catch (error) {

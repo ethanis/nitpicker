@@ -1,10 +1,10 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'nitpicker'
+description: 'Automatically add comments to pull requests given a set of file patterns'
+author: 'erdennis13'
 inputs:
-  myInput:              # change this
-    description: 'input description here'
-    default: 'default value if applicable'
+  nitpickerFile:
+    description: 'Path to nitpicker config file'
+    default: './.github/nitpicker.yml'
 runs:
   using: 'node12'
   main: 'lib/main.js'
