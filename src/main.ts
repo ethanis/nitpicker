@@ -20,8 +20,8 @@ async function run() {
     const token = core.getInput('token');
     const octokit = new github.GitHub(token);
 
-    console.log('Instantiated new octokit');
-    console.log(octokit);
+    const eventName = process.env.GITHUB_EVENT_NAME;
+    console.log(eventName);
 
     core.setOutput('time', new Date().toTimeString());
   } catch (error) {

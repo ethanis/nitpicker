@@ -6,5 +6,9 @@ export function getConfiguredComments(filePath: string): Comment[] {
   const contents = fs.readFileSync(filePath, 'utf8');
   const yaml: Comment[] = safeLoad(contents);
 
-  return yaml;
+  const comments: Comment[] = yaml.filter(
+    y => y.markdown && y.pathFilter?.length > 0
+  );
+
+  return comments;
 }

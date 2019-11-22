@@ -1,1 +1,1 @@
-export * from './configReaderService';
+export * from './configReader';

@@ -4,7 +4,7 @@ author: 'erdennis13'
 inputs:
   nitpickerFile:
     description: 'Path to nitpicker config file'
-    default: './.github/nitpicker.yml'
+    default: './.github/nitpicks.yml'
   token:
     description: 'The GITHUB_TOKEN secret'
 runs:
