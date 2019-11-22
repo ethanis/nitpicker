@@ -10,6 +10,7 @@ async function run() {
 
     if ((comments?.length ?? 0) == 0) {
       console.log('No comments are configured');
+
       return;
     }
 
