@@ -25,11 +25,6 @@ async function getChangedFilesFromSha(
   const owner = github.context.payload.repository?.owner?.name;
   const repo = github.context.payload.repository?.name;
 
-  console.log('Before', beforeSha);
-  console.log('After', afterSha);
-  console.log('Owner', owner);
-  console.log('Repo', repo);
-
   if (!beforeSha || !afterSha || !repo || !owner) {
     return [];
   }
@@ -43,9 +38,9 @@ async function getChangedFilesFromSha(
 
   const changedFiles = listFilesResponse.data.files.map(f => f.filename);
 
-  core.debug('found changed files:');
+  console.log('found changed files:');
   for (const file of changedFiles) {
-    core.debug('  ' + file);
+    console.log('  ' + file);
   }
 
   return changedFiles;
@@ -67,9 +62,9 @@ async function getChangedFilesFromPR(
 
   const changedFiles = listFilesResponse.data.map(f => f.filename);
 
-  core.debug('found changed files:');
+  console.log('found changed files:');
   for (const file of changedFiles) {
-    core.debug('  ' + file);
+    console.log('  ' + file);
   }
 
   return changedFiles;

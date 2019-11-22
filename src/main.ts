@@ -24,8 +24,6 @@ async function run() {
 
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
 
-    console.log(`Found ${changedFiles.length} files`);
-
     core.setOutput('time', new Date().toTimeString());
   } catch (error) {
     core.setFailed(error.message);
