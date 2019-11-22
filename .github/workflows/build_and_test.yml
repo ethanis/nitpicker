@@ -1,7 +1,6 @@
 name: 'Build and test nitpicker'
 on:
-  pull_request:
-  push:
+  [push, pull_request]:
     branches:
       - master
       - 'releases/*'
