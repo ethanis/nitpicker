@@ -8,12 +8,15 @@ async function run() {
 
     const comments = getConfiguredComments(nitpickerFile);
 
+    if ((comments?.length ?? 0) == 0) {
+      console.log('No comments are configured');
+      return;
+    }
+
     console.log(`There are ${comments.length} comments configured`);
 
     core.setOutput('time', new Date().toTimeString());
   } catch (error) {
-    console.log(error);
-
     core.setFailed(error.message);
   }
 }
