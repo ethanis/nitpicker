@@ -10,6 +10,7 @@ import { Comment } from './models';
 
 async function run() {
   try {
+    console.log('hello gh actions!');
     const nitpicksFile = core.getInput('nitpicksFile');
     console.log(`Nitpicks file: ${nitpicksFile}`);
 
