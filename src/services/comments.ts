@@ -43,6 +43,8 @@ export async function writeComments(
 ): Promise<void> {
   console.log(`writing ${comments.length} comments`);
 
+  console.log(github.context);
+
   const pullRequest = github.context.payload.pull_request;
   const owner = github.context.payload.repository?.owner?.name;
   const repo = github.context.payload.repository?.name;
