@@ -10,10 +10,10 @@ import { Comment } from './models';
 
 async function run() {
   try {
-    const nitpickerFile = core.getInput('nitpickerFile');
-    console.log(`Nitpicker file: ${nitpickerFile}`);
+    const nitpicksFile = core.getInput('nitpicksFile');
+    console.log(`Nitpicks file: ${nitpicksFile}`);
 
-    const comments = getConfiguredComments(nitpickerFile);
+    const comments = getConfiguredComments(nitpicksFile);
 
     if ((comments?.length ?? 0) == 0) {
       console.log('No comments are configured');
