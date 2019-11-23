@@ -3,7 +3,8 @@ import * as github from '@actions/github';
 import {
   getConfiguredComments,
   getChangedFiles,
-  getCommentsToAdd
+  getCommentsToAdd,
+  writeComments
 } from './services';
 import { Comment } from './models';
 
@@ -27,16 +28,9 @@ async function run() {
     const eventName = process.env.GITHUB_EVENT_NAME;
 
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
-
     const commentsToAdd: Comment[] = getCommentsToAdd(comments, changedFiles);
 
-    for (const comment of commentsToAdd) {
-      console.log('Adding comment with text');
-      console.log(comment.markdown);
-      console.log('');
-    }
-
-    core.setOutput('time', new Date().toTimeString());
+    await writeComments(octokit, commentsToAdd, eventName);
   } catch (error) {
     core.setFailed(error.message);
   }

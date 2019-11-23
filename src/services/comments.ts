@@ -1,6 +1,7 @@
+import * as github from '@actions/github';
 import * as core from '@actions/core';
 import { Comment } from '../models';
-import { Minimatch, match } from 'minimatch';
+import { Minimatch } from 'minimatch';
 
 export function getCommentsToAdd(
   allComments: Comment[],
@@ -18,7 +19,6 @@ export function getCommentsToAdd(
 
       for (const changedFile of changedFiles) {
         core.debug(` - ${changedFile}`);
-
         if (matcher.match(changedFile)) {
           commentsToAdd.push(comment);
           matchedComment = true;
@@ -35,4 +35,35 @@ export function getCommentsToAdd(
   }
 
   return commentsToAdd;
+}
+
+export async function writeComments(
+  octokit: github.GitHub,
+  comments: Comment[],
+  eventName: string | undefined
+): Promise<void> {
+  if (eventName !== 'pull_request') {
+    console.log('we will only nitpick pull requests');
+
+    return;
+  }
+
+  const pullRequest = github.context.payload.pull_request;
+  const owner = github.context.payload.repository?.owner?.name;
+  const repo = github.context.payload.repository?.name;
+
+  if (!pullRequest || !owner || !repo) {
+    return;
+  }
+
+  await Promise.all(
+    comments.map(comment => {
+      octokit.issues.createComment({
+        repo: repo,
+        owner: owner,
+        issue_number: pullRequest.number,
+        body: comment.markdown
+      });
+    })
+  );
 }
