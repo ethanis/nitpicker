@@ -1,4 +1,6 @@
-- markdown: "## Notice \n Thanks for this contribution. We _really_ appreciate your help! :heart:"
+- markdown:
+    ## Notice
+    Thanks for this contribution. We _really_ appreciate your help! :heart:
   pathFilter:
     - '*'
 - markdown: |
