@@ -1,7 +1,7 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
 import { Comment } from '../models';
-import { Minimatch } from 'minimatch';
+import { Minimatch, IOptions } from 'minimatch';
 
 export function getCommentsToAdd(
   allComments: Comment[],
@@ -9,13 +9,20 @@ export function getCommentsToAdd(
 ): Comment[] {
   const commentsToAdd: Comment[] = [];
 
+  const options: IOptions = { dot: true, nocase: true };
   for (const comment of allComments) {
     let matchedComment = false;
 
     for (const pathFilter of comment.pathFilter) {
       core.debug(` checking pattern ${pathFilter}`);
 
-      const matcher = new Minimatch(pathFilter);
+      if (pathFilter === '*') {
+        commentsToAdd.push(comment);
+        matchedComment = true;
+        break;
+      }
+
+      const matcher = new Minimatch(pathFilter, options);
 
       for (const changedFile of changedFiles) {
         core.debug(` - ${changedFile}`);
@@ -41,7 +48,7 @@ export async function writeComments(
   octokit: github.GitHub,
   comments: Comment[]
 ): Promise<void> {
-  console.log(`writing ${comments.length} comments`);
+  core.debug(`writing ${comments.length} comments`);
 
   const pullRequest = github.context.payload.pull_request;
   const fullName = github.context.payload.repository?.full_name;
@@ -50,7 +57,7 @@ export async function writeComments(
   const repo = parts[1];
 
   if (!pullRequest || !owner || !repo) {
-    console.log('we will only nitpick pull requests');
+    core.debug('we will only nitpick pull requests');
 
     return;
   }
