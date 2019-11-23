@@ -2,7 +2,7 @@
     ## Notice
     Thanks for this contribution. We _really_ appreciate your help!
   pathFilter:
-    - '**'
+    - '*'
 - markdown: |
     ## Blocking issue
     We no longer check in binaries to this repo - our new convention is to use NuGet packages.
@@ -18,4 +18,4 @@
       - [ ] Tested change in multiple web browsers (Chrome, Firefox, Safari, and Edge)
       - [ ] Updated documentation with any API changes
   pathFilter:
-    - 'payments/**'
+    - '**/*.ts'

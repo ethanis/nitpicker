@@ -1,7 +1,12 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import { getChangedFiles } from './services/changes';
-import { getConfiguredComments } from './services';
+import {
+  getConfiguredComments,
+  getChangedFiles,
+  getCommentsToAdd,
+  writeComments
+} from './services';
+import { Comment } from './models';
 
 async function run() {
   try {
@@ -21,12 +26,12 @@ async function run() {
     const token = core.getInput('token');
     const octokit = new github.GitHub(token);
     const eventName = process.env.GITHUB_EVENT_NAME;
+    console.log(eventName);
 
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
+    const commentsToAdd: Comment[] = getCommentsToAdd(comments, changedFiles);
 
-    console.log(`Found ${changedFiles.length} files`);
-
-    core.setOutput('time', new Date().toTimeString());
+    await writeComments(octokit, commentsToAdd);
   } catch (error) {
     core.setFailed(error.message);
   }
