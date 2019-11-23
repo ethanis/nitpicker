@@ -11,8 +11,6 @@
   blocking: true
   pathFilter:
     - '**/*.dll'
-    - '**/*.yml'
-    - '**/*.yaml'
 - markdown: |
     ## Information
     You modified a file that controls the payment processing for the company. Please ensure that you have completed all of the following:
