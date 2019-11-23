@@ -31,9 +31,7 @@ async function run() {
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
     const commentsToAdd: Comment[] = getCommentsToAdd(comments, changedFiles);
 
-    console.log(`writing ${commentsToAdd.length} comments`);
-
-    await writeComments(octokit, commentsToAdd, eventName);
+    await writeComments(octokit, commentsToAdd);
   } catch (error) {
     core.setFailed(error.message);
   }

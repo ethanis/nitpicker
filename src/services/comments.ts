@@ -39,31 +39,25 @@ export function getCommentsToAdd(
 
 export async function writeComments(
   octokit: github.GitHub,
-  comments: Comment[],
-  eventName: string | undefined
+  comments: Comment[]
 ): Promise<void> {
-  if (eventName !== 'pull_request') {
-    console.log('we will only nitpick pull requests');
-
-    return;
-  }
+  console.log(`writing ${comments.length} comments`);
 
   const pullRequest = github.context.payload.pull_request;
   const owner = github.context.payload.repository?.owner?.name;
   const repo = github.context.payload.repository?.name;
 
   if (!pullRequest || !owner || !repo) {
+    console.log('we will only nitpick pull requests');
     return;
   }
 
-  await Promise.all(
-    comments.map(comment => {
-      octokit.issues.createComment({
-        repo: repo,
-        owner: owner,
-        issue_number: pullRequest.number,
-        body: comment.markdown
-      });
-    })
-  );
+  for (const comment of comments) {
+    await octokit.issues.createComment({
+      repo: repo,
+      owner: owner,
+      issue_number: pullRequest.number,
+      body: comment.markdown
+    });
+  }
 }
