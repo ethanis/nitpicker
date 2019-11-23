@@ -14,16 +14,22 @@ export function getCommentsToAdd(
     let matchedComment = false;
 
     for (const pathFilter of comment.pathFilter) {
-      console.log(` checking pattern ${pathFilter}`);
+      core.debug(` checking pattern ${pathFilter}`);
+
+      if (pathFilter === '*') {
+        commentsToAdd.push(comment);
+        matchedComment = true;
+        break;
+      }
 
       const matcher = new Minimatch(pathFilter, options);
 
       for (const changedFile of changedFiles) {
-        console.log(` - ${changedFile}`);
+        core.debug(` - ${changedFile}`);
         if (matcher.match(changedFile)) {
           commentsToAdd.push(comment);
           matchedComment = true;
-          console.log(` ${changedFile} matches`);
+          core.debug(` ${changedFile} matches`);
 
           break;
         }
@@ -42,7 +48,7 @@ export async function writeComments(
   octokit: github.GitHub,
   comments: Comment[]
 ): Promise<void> {
-  console.log(`writing ${comments.length} comments`);
+  core.debug(`writing ${comments.length} comments`);
 
   const pullRequest = github.context.payload.pull_request;
   const fullName = github.context.payload.repository?.full_name;
@@ -51,7 +57,7 @@ export async function writeComments(
   const repo = parts[1];
 
   if (!pullRequest || !owner || !repo) {
-    console.log('we will only nitpick pull requests');
+    core.debug('we will only nitpick pull requests');
 
     return;
   }
