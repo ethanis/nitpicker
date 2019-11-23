@@ -44,13 +44,10 @@ export async function writeComments(
   console.log(`writing ${comments.length} comments`);
 
   const pullRequest = github.context.payload.pull_request;
-  const owner = github.context.payload.repository?.owner?.name ?? 'erdennis13';
-  const repo = github.context.payload.repository?.name;
-
-  console.log('PR', pullRequest);
-  console.log('owner (full)', github.context.payload.repository?.owner);
-  console.log('owner (name)', owner);
-  console.log('repo', repo);
+  const fullName = github.context.payload.repository?.full_name;
+  const parts = fullName?.split('/') ?? [];
+  const owner = parts[0];
+  const repo = parts[1];
 
   if (!pullRequest || !owner || !repo) {
     console.log('we will only nitpick pull requests');

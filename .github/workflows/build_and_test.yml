@@ -19,4 +19,5 @@ jobs:
       - name: nitpicker
         uses: ./
         with:
+          nitpickerFile: './.github/nitpicks.yml'
           token: '${{ secrets.GITHUB_TOKEN }}'
