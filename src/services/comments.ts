@@ -14,16 +14,16 @@ export function getCommentsToAdd(
     let matchedComment = false;
 
     for (const pathFilter of comment.pathFilter) {
-      core.debug(` checking pattern ${pathFilter}`);
+      console.log(` checking pattern ${pathFilter}`);
 
       const matcher = new Minimatch(pathFilter, options);
 
       for (const changedFile of changedFiles) {
-        core.debug(` - ${changedFile}`);
+        console.log(` - ${changedFile}`);
         if (matcher.match(changedFile)) {
           commentsToAdd.push(comment);
           matchedComment = true;
-          core.debug(` ${changedFile} matches`);
+          console.log(` ${changedFile} matches`);
 
           break;
         }
