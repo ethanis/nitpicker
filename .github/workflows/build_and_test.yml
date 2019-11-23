@@ -21,4 +21,3 @@ jobs:
         with:
           nitpicksFile: './.github/nitpicks.yml'
           token: '${{ secrets.GITHUB_TOKEN }}'
-          ACTIONS_STEP_DEBUG: true
