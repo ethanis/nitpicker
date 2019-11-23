@@ -2,8 +2,8 @@ name: 'nitpicker'
 description: 'Automatically add comments to pull requests given a set of file patterns'
 author: 'erdennis13'
 inputs:
-  nitpickerFile:
-    description: 'Path to nitpicker config file'
+  nitpicksFile:
+    description: 'Path to nitpicks file'
     default: './.github/nitpicks.yml'
   token:
     description: 'The GITHUB_TOKEN secret'
