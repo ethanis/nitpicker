@@ -49,6 +49,7 @@ export async function writeComments(
 
   if (!pullRequest || !owner || !repo) {
     console.log('we will only nitpick pull requests');
+
     return;
   }
 
