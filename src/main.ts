@@ -26,9 +26,12 @@ async function run() {
     const token = core.getInput('token');
     const octokit = new github.GitHub(token);
     const eventName = process.env.GITHUB_EVENT_NAME;
+    console.log(eventName);
 
     const changedFiles: string[] = await getChangedFiles(octokit, eventName);
     const commentsToAdd: Comment[] = getCommentsToAdd(comments, changedFiles);
+
+    console.log(`writing ${commentsToAdd.length} comments`);
 
     await writeComments(octokit, commentsToAdd, eventName);
   } catch (error) {
