@@ -1,7 +1,7 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
 import { Comment } from '../models';
-import { Minimatch } from 'minimatch';
+import { Minimatch, IOptions } from 'minimatch';
 
 export function getCommentsToAdd(
   allComments: Comment[],
@@ -9,13 +9,14 @@ export function getCommentsToAdd(
 ): Comment[] {
   const commentsToAdd: Comment[] = [];
 
+  const options: IOptions = { dot: true, nocase: true };
   for (const comment of allComments) {
     let matchedComment = false;
 
     for (const pathFilter of comment.pathFilter) {
       core.debug(` checking pattern ${pathFilter}`);
 
-      const matcher = new Minimatch(pathFilter);
+      const matcher = new Minimatch(pathFilter, options);
 
       for (const changedFile of changedFiles) {
         core.debug(` - ${changedFile}`);
