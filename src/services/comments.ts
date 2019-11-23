@@ -44,7 +44,7 @@ export async function writeComments(
   console.log(`writing ${comments.length} comments`);
 
   const pullRequest = github.context.payload.pull_request;
-  const owner = github.context.payload.repository?.owner?.name;
+  const owner = github.context.payload.repository?.owner?.name ?? 'erdennis13';
   const repo = github.context.payload.repository?.name;
 
   console.log('PR', pullRequest);
