@@ -43,11 +43,14 @@ export async function writeComments(
 ): Promise<void> {
   console.log(`writing ${comments.length} comments`);
 
-  console.log(github.context);
-
   const pullRequest = github.context.payload.pull_request;
   const owner = github.context.payload.repository?.owner?.name;
   const repo = github.context.payload.repository?.name;
+
+  console.log('PR', pullRequest);
+  console.log('owner (full)', github.context.payload.repository?.owner);
+  console.log('owner (name)', owner);
+  console.log('repo', repo);
 
   if (!pullRequest || !owner || !repo) {
     console.log('we will only nitpick pull requests');
