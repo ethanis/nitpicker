@@ -10,6 +10,7 @@ import { Comment } from './models';
 
 async function run() {
   try {
+    console.log('hello GitHub!');
     const nitpicksFile = core.getInput('nitpicksFile');
     console.log(`Nitpicks file: ${nitpicksFile}`);
 
