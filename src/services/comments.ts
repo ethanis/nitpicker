@@ -30,10 +30,11 @@ export async function getTargetState(
   );
 
   for (const comment of allComments) {
-    const isApplicable = applicableComments.filter(
-      c =>
-        c.markdown === comment.markdown && c.pathFilter === comment.pathFilter
-    );
+    const isApplicable =
+      applicableComments.filter(
+        c =>
+          c.markdown === comment.markdown && c.pathFilter === comment.pathFilter
+      )?.length > 0;
     const existing = existingComments.filter(c => c.body === comment.markdown);
 
     if (comment.blocking && isApplicable) {
