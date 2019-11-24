@@ -2,7 +2,7 @@ name: 'nitpicker'
 description: 'Automatically add comments to pull requests given a set of file patterns'
 author: 'erdennis13'
 inputs:
-  nitpicksFile:
+  nitpicks:
     description: 'Path to nitpicks file'
     default: './.github/nitpicks.yml'
   token:

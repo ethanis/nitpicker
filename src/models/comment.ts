@@ -3,3 +3,9 @@ export interface Comment {
   markdown: string;
   blocking: boolean;
 }
+
+export interface PullRequestComment {
+  body: string;
+  author: string;
+  id: number;
+}

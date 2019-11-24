@@ -3,18 +3,21 @@ import * as github from '@actions/github';
 import {
   getConfiguredComments,
   getChangedFiles,
-  getCommentsToAdd,
-  writeComments
+  writeComments,
+  getTargetState,
+  resolveComments,
+  reactivateComments,
+  startCheck,
+  completeCheck
 } from './services';
-import { Comment } from './models';
+import { Comment, PullRequestComment } from './models';
 
 async function run() {
   try {
-    console.log('hello gh actions!');
-    const nitpicksFile = core.getInput('nitpicksFile');
-    console.log(`Nitpicks file: ${nitpicksFile}`);
+    const nitpicks = core.getInput('nitpicks');
+    console.log(`Nitpicks file: ${nitpicks}`);
 
-    const comments = getConfiguredComments(nitpicksFile);
+    const comments = getConfiguredComments(nitpicks);
 
     if ((comments?.length ?? 0) == 0) {
       console.log('No comments are configured');
@@ -29,10 +32,18 @@ async function run() {
     const eventName = process.env.GITHUB_EVENT_NAME;
     console.log(eventName);
 
-    const changedFiles: string[] = await getChangedFiles(octokit, eventName);
-    const commentsToAdd: Comment[] = getCommentsToAdd(comments, changedFiles);
+    const checkRun = await startCheck(octokit);
 
-    await writeComments(octokit, commentsToAdd);
+    const changedFiles: string[] = await getChangedFiles(octokit, eventName);
+    const targetState = await getTargetState(octokit, comments, changedFiles);
+
+    await Promise.all([
+      writeComments(octokit, targetState.commentsToAdd),
+      resolveComments(octokit, targetState.commentsToResolve),
+      reactivateComments(octokit, targetState.commentsToReactivate)
+    ]);
+
+    await completeCheck(octokit, checkRun.id, targetState.conclusion);
   } catch (error) {
     core.setFailed(error.message);
   }
