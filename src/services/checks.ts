@@ -11,7 +11,7 @@ export async function startCheck(octokit: github.GitHub) {
     owner: context.owner,
     repo: context.repo,
     name: 'nitpicker',
-    head_sha: context.pullRequest?.head.Sha,
+    head_sha: context.pullRequest?.head.sha,
     status: 'in_progress'
   });
 
