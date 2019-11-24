@@ -14,6 +14,7 @@ import { Comment, PullRequestComment } from './models';
 
 async function run() {
   try {
+    console.log('gh actions + nitpicker = heart');
     const nitpicks = core.getInput('nitpicks');
     console.log(`Nitpicks file: ${nitpicks}`);
 
