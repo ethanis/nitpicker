@@ -1,5 +1,4 @@
 import * as github from '@actions/github';
-import * as core from '@actions/core';
 import { parseContext } from './context';
 import { Conclusion } from '../models';
 
@@ -12,7 +11,7 @@ export async function startCheck(octokit: github.GitHub) {
     owner: context.owner,
     repo: context.repo,
     name: 'nitpicker',
-    head_sha: context.pullRequest?.head.sha,
+    head_sha: context.sha,
     status: 'in_progress'
   });
 

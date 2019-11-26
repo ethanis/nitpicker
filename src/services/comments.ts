@@ -80,8 +80,14 @@ export async function writeComments(
 
   const context = parseContext();
 
-  if (!context.pullRequest || !context.owner || !context.repo) {
+  if (!context.pullRequest) {
     core.debug('we will only nitpick pull requests');
+
+    for (const comment of comments) {
+      console.log('Matched comment: ');
+      console.log(comment.markdown);
+      console.log();
+    }
 
     return;
   }
@@ -165,7 +171,7 @@ async function getExistingComments(
 ): Promise<PullRequestComment[]> {
   const context = parseContext();
 
-  if (!context.pullRequest || !context.owner || !context.repo) {
+  if (!context.pullRequest) {
     core.debug('we will only nitpick pull requests');
 
     return [];
