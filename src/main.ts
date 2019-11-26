@@ -30,7 +30,6 @@ async function run() {
     const token = core.getInput('token');
     const octokit = new github.GitHub(token);
     const eventName = process.env.GITHUB_EVENT_NAME;
-    console.log(eventName);
 
     const checkRun = await startCheck(octokit);
 
