@@ -77,7 +77,11 @@ function parseStatus(status: string): ChangeType {
   switch (status) {
     case 'added':
       return ChangeType.add;
+    case 'removed':
+      return ChangeType.delete;
+    case 'modified':
+      return ChangeType.edit;
     default:
-      return ChangeType.any;
+      return ChangeType.edit;
   }
 }
