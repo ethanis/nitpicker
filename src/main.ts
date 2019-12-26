@@ -10,7 +10,7 @@ import {
   startCheck,
   completeCheck
 } from './services';
-import { Comment, PullRequestComment } from './models';
+import { Comment, PullRequestComment, Change } from './models';
 
 async function run() {
   try {
@@ -28,13 +28,16 @@ async function run() {
     console.log(`There are ${comments.length} comments configured`);
 
     const token = core.getInput('token');
-    const octokit = new github.GitHub(token);
+    const octokit = new github.GitHub(token, {
+      previews: ['squirrel-girl']
+    });
+
     const eventName = process.env.GITHUB_EVENT_NAME;
 
     const checkRun = await startCheck(octokit);
 
-    const changedFiles: string[] = await getChangedFiles(octokit, eventName);
-    const targetState = await getTargetState(octokit, comments, changedFiles);
+    const changes: Change[] = await getChangedFiles(octokit, eventName);
+    const targetState = await getTargetState(octokit, comments, changes);
 
     await Promise.all([
       writeComments(octokit, targetState.commentsToAdd),

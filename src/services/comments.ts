@@ -1,13 +1,19 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { Comment, PullRequestComment, Conclusion } from '../models';
+import {
+  Comment,
+  PullRequestComment,
+  Conclusion,
+  ChangeType,
+  Change
+} from '../models';
 import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
 
 export async function getTargetState(
   octokit: github.GitHub,
   allComments: Comment[],
-  changedFiles: string[]
+  changes: Change[]
 ): Promise<{
   commentsToAdd: Comment[];
   commentsToReactivate: PullRequestComment[];
@@ -26,7 +32,7 @@ export async function getTargetState(
 
   const applicableComments: Comment[] = getApplicableComments(
     allComments,
-    changedFiles
+    changes
   );
 
   for (const comment of allComments) {
@@ -83,6 +89,7 @@ export async function writeComments(
   if (!context.pullRequest) {
     core.debug('we will only nitpick pull requests');
 
+    // Write matched comments out to build log
     for (const comment of comments) {
       console.log('Matched comment: ');
       console.log(comment.markdown);
@@ -92,6 +99,7 @@ export async function writeComments(
     return;
   }
 
+  // Write matched comments to pull request
   for (const comment of comments) {
     await octokit.issues.createComment({
       repo: context.repo,
@@ -127,38 +135,103 @@ export async function reactivateComments(
 
 function getApplicableComments(
   allComments: Comment[],
-  changedFiles: string[]
+  changes: Change[]
 ): Comment[] {
   const applicableComments: Comment[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
   for (const comment of allComments) {
-    let matchedComment = false;
+    const inclusions: string[] = [];
+    const exclusions: string[] = [];
 
     for (const pathFilter of comment.pathFilter) {
-      core.debug(` checking pattern ${pathFilter}`);
-
-      if (pathFilter === '*') {
-        applicableComments.push(comment);
-        matchedComment = true;
-        break;
+      if (pathFilter.startsWith('!')) {
+        exclusions.push(pathFilter.substring(1));
+      } else {
+        inclusions.push(pathFilter);
       }
+    }
 
-      const matcher = new Minimatch(pathFilter, options);
+    for (const change of changes) {
+      let isMatch = false;
 
-      for (const changedFile of changedFiles) {
-        core.debug(` - ${changedFile}`);
-        if (matcher.match(changedFile)) {
+      // Match inclusions first
+      for (const inclusion of inclusions) {
+        core.debug(` checking pattern ${inclusion}`);
+
+        let changeType: ChangeType;
+        let pattern = inclusion;
+
+        switch (inclusion[0]) {
+          case '+':
+            changeType = ChangeType.add;
+            pattern = inclusion.substring(1);
+            break;
+          case '-':
+            changeType = ChangeType.delete;
+            pattern = inclusion.substring(1);
+            break;
+          case '~':
+            changeType = ChangeType.edit;
+            pattern = inclusion.substring(1);
+            break;
+          default:
+            changeType = ChangeType.any;
+            break;
+        }
+
+        if (pattern === '*') {
           applicableComments.push(comment);
-          matchedComment = true;
-          core.debug(` ${changedFile} matches`);
-
+          isMatch = true;
           break;
         }
-      }
 
-      if (matchedComment) {
-        break;
+        const matcher = new Minimatch(pattern, options);
+        core.debug(` - ${change}`);
+
+        if (matcher.match(change)) {
+          // applicableComments.push(comment);
+          // matchedComment = true;
+          // core.debug(` ${changedFile} matches`);
+
+          switch (changeType) {
+            case ChangeType.add:
+              isMatch = change.changeType == ChangeType.add;
+              break;
+            case ChangeType.delete:
+              isMatch = change.changeType == ChangeType.delete;
+              break;
+            case ChangeType.edit:
+              isMatch =
+                change.changeType != ChangeType.add &&
+                change.changeType != ChangeType.delete;
+              break;
+            case ChangeType.any:
+              isMatch = true;
+              break;
+          }
+        }
+
+        // Check if any exclusion should filter out the match
+        for (const exclusion in exclusions) {
+          // First exclusion to match will negate the inclusion match
+          const matcher = new Minimatch(exclusion, options);
+          const match = matcher.match(change.file);
+
+          // If not a match, no need to negate the inclusive pattern
+          if (!match) {
+            continue;
+          }
+
+          // If this was a match, we need to negate the inclusive pattern
+          isMatch = false;
+          break;
+        }
+
+        // If we've made it this far, comment is good to go
+        if (isMatch) {
+          applicableComments.push(comment);
+        }
       }
     }
   }

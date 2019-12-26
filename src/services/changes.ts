@@ -1,25 +1,24 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
+import { Change, ChangeType } from '../models';
 
 export async function getChangedFiles(
   octokit: github.GitHub,
   eventName: string | undefined
-): Promise<string[]> {
+): Promise<Change[]> {
   if (!eventName) {
     return [];
   }
 
   switch (eventName) {
     case 'push':
-      return getChangedFilesFromSha(octokit);
+      return getChangesFromSha(octokit);
     default:
-      return getChangedFilesFromPR(octokit);
+      return getChangesFromPR(octokit);
   }
 }
 
-async function getChangedFilesFromSha(
-  octokit: github.GitHub
-): Promise<string[]> {
+async function getChangesFromSha(octokit: github.GitHub): Promise<Change[]> {
   const beforeSha = github.context.payload.before;
   const afterSha = github.context.payload.after;
   const owner = github.context.payload.repository?.owner?.name;
@@ -36,19 +35,20 @@ async function getChangedFilesFromSha(
     head: afterSha
   });
 
-  const changedFiles = listFilesResponse.data.files.map(f => f.filename);
+  const changes = listFilesResponse.data.files.map(f => ({
+    file: f.filename,
+    changeType: parseStatus(f.status)
+  }));
 
   core.debug('found changed files:');
-  for (const file of changedFiles) {
-    core.debug('  ' + file);
+  for (const change of changes) {
+    core.debug('  ' + change.file);
   }
 
-  return changedFiles;
+  return changes;
 }
 
-async function getChangedFilesFromPR(
-  octokit: github.GitHub
-): Promise<string[]> {
+async function getChangesFromPR(octokit: github.GitHub): Promise<Change[]> {
   const pullRequest = github.context.payload.pull_request;
   if (!pullRequest) {
     return [];
@@ -60,12 +60,24 @@ async function getChangedFilesFromPR(
     pull_number: pullRequest.number
   });
 
-  const changedFiles = listFilesResponse.data.map(f => f.filename);
+  const changes = listFilesResponse.data.map(f => ({
+    file: f.filename,
+    changeType: parseStatus(f.status)
+  }));
 
   core.debug('found changed files:');
-  for (const file of changedFiles) {
-    core.debug('  ' + file);
+  for (const change of changes) {
+    core.debug('  ' + change.file);
   }
 
-  return changedFiles;
+  return changes;
+}
+
+function parseStatus(status: string): ChangeType {
+  switch (status) {
+    case 'added':
+      return ChangeType.add;
+    default:
+      return ChangeType.any;
+  }
 }
