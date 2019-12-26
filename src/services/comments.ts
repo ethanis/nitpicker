@@ -189,7 +189,7 @@ function getApplicableComments(
         const matcher = new Minimatch(pattern, options);
         core.debug(` - ${change}`);
 
-        if (matcher.match(change)) {
+        if (matcher.match(change.file)) {
           // applicableComments.push(comment);
           // matchedComment = true;
           // core.debug(` ${changedFile} matches`);
