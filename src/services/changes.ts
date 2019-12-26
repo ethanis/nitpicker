@@ -77,8 +77,6 @@ function parseStatus(status: string): ChangeType {
   switch (status) {
     case 'added':
       return ChangeType.add;
-    case 'modified':
-      return ChangeType.edit;
     default:
       return ChangeType.any;
   }
