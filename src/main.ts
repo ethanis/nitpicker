@@ -10,7 +10,7 @@ import {
   startCheck,
   completeCheck
 } from './services';
-import { Comment, PullRequestComment, Change } from './models';
+import { Change } from './models';
 
 async function run() {
   try {
@@ -28,6 +28,11 @@ async function run() {
     console.log(`There are ${comments.length} comments configured`);
 
     const token = core.getInput('token');
+
+    if (token?.length ?? 0 == 0) {
+      throw 'You must allow the nitpicker action to access the GitHub secret (e.g. `token: \'${{ secrets.GITHUB_TOKEN }}\'`)';
+    }
+
     const octokit = new github.GitHub(token, {
       previews: ['squirrel-girl']
     });

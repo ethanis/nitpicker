@@ -180,20 +180,12 @@ function getApplicableComments(
             break;
         }
 
-        if (pattern === '*') {
-          applicableComments.push(comment);
-          isMatch = true;
-          break;
-        }
-
         const matcher = new Minimatch(pattern, options);
-        core.debug(` - ${change}`);
+        core.debug(` - ${change.file}`);
 
-        if (matcher.match(change.file)) {
-          // applicableComments.push(comment);
-          // matchedComment = true;
-          // core.debug(` ${changedFile} matches`);
+        const matched = pattern === '*' ? true : matcher.match(change.file);
 
+        if (matched) {
           switch (changeType) {
             case ChangeType.add:
               isMatch = change.changeType == ChangeType.add;
@@ -203,35 +195,40 @@ function getApplicableComments(
               break;
             case ChangeType.edit:
               isMatch =
-                change.changeType != ChangeType.add &&
-                change.changeType != ChangeType.delete;
+                change.changeType !== ChangeType.add &&
+                change.changeType !== ChangeType.delete;
               break;
             case ChangeType.any:
               isMatch = true;
               break;
           }
         }
+      }
 
-        // Check if any exclusion should filter out the match
-        for (const exclusion in exclusions) {
-          // First exclusion to match will negate the inclusion match
-          const matcher = new Minimatch(exclusion, options);
-          const match = matcher.match(change.file);
+      // If no inclusions match this file path, continue on to the next change
+      if (!isMatch) {
+        continue;
+      }
 
-          // If not a match, no need to negate the inclusive pattern
-          if (!match) {
-            continue;
-          }
+      // Check if any exclusion should filter out the match
+      for (const exclusion in exclusions) {
+        // First exclusion to match will negate the inclusion match
+        const matcher = new Minimatch(exclusion, options);
+        const match = matcher.match(change.file);
 
-          // If this was a match, we need to negate the inclusive pattern
-          isMatch = false;
-          break;
+        // If not a match, no need to negate the inclusive pattern
+        if (!match) {
+          continue;
         }
 
-        // If we've made it this far, comment is good to go
-        if (isMatch) {
-          applicableComments.push(comment);
-        }
+        // If this was a match, we need to negate the inclusive pattern
+        isMatch = false;
+        break;
+      }
+
+      // If we've made it this far, comment is good to go
+      if (isMatch) {
+        applicableComments.push(comment);
       }
     }
   }
