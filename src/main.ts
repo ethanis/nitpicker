@@ -30,7 +30,7 @@ async function run() {
     const token = core.getInput('token');
     console.log(token);
 
-    if (token?.length ?? 0 == 0) {
+    if (!token) {
       core.setFailed(
         "You must allow the nitpicker action to access the GitHub secret (e.g. `token: '${{ secrets.GITHUB_TOKEN }}'`)"
       );
