@@ -39,6 +39,8 @@ async function run() {
 
     const eventName = process.env.GITHUB_EVENT_NAME;
 
+    console.log('starting check');
+
     const checkRun = await startCheck(octokit);
 
     const changes: Change[] = await getChangedFiles(octokit, eventName);
@@ -52,6 +54,8 @@ async function run() {
 
     await completeCheck(octokit, checkRun.id, targetState.conclusion);
   } catch (error) {
+    console.log(error);
+
     core.setFailed(error.message);
   }
 }
