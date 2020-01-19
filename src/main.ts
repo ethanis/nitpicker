@@ -28,9 +28,14 @@ async function run() {
     console.log(`There are ${comments.length} comments configured`);
 
     const token = core.getInput('token');
+    console.log(token);
 
     if (token?.length ?? 0 == 0) {
-      throw 'You must allow the nitpicker action to access the GitHub secret (e.g. `token: \'${{ secrets.GITHUB_TOKEN }}\'`)';
+      core.setFailed(
+        "You must allow the nitpicker action to access the GitHub secret (e.g. `token: '${{ secrets.GITHUB_TOKEN }}'`)"
+      );
+
+      return;
     }
 
     const octokit = new github.GitHub(token, {
@@ -54,8 +59,6 @@ async function run() {
 
     await completeCheck(octokit, checkRun.id, targetState.conclusion);
   } catch (error) {
-    console.log(error);
-
     core.setFailed(error.message);
   }
 }
