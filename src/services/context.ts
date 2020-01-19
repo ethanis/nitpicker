@@ -8,8 +8,6 @@ export function parseContext() {
   const repo = parts[1];
   const sha = pullRequest?.head?.sha ?? github.context.payload.after;
 
-  console.log('full context', github.context);
-
   return {
     pullRequest: pullRequest,
     owner: owner,

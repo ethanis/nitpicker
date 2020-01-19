@@ -8,4 +8,5 @@ export interface PullRequestComment {
   body: string;
   author: string;
   id: number;
+  reactions: object[];
 }

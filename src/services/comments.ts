@@ -253,9 +253,12 @@ async function getExistingComments(
     issue_number: context.pullRequest.number
   });
 
+  console.log('comments', comments);
+
   return comments.data.map(c => ({
     body: c.body,
     author: c.user.login,
-    id: c.id
+    id: c.id,
+    reactions: []
   }));
 }
