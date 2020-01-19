@@ -5,6 +5,8 @@ import { Conclusion } from '../models';
 export async function startCheck(octokit: github.GitHub) {
   const context = parseContext();
 
+  console.log('context', context);
+
   console.log('Statuses', context.pullRequest?.statuses ?? 'n/a');
 
   const result = await octokit.checks.create({

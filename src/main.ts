@@ -28,7 +28,6 @@ async function run() {
     console.log(`There are ${comments.length} comments configured`);
 
     const token = core.getInput('token');
-    console.log(token);
 
     if (!token) {
       core.setFailed(
