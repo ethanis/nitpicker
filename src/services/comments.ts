@@ -1,14 +1,20 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
+import * as octokit from '@octokit/rest';
 import {
   Comment,
   PullRequestComment,
   Conclusion,
   ChangeType,
-  Change
+  Change,
+  Closed,
+  Active,
+  Reaction
 } from '../models';
 import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
+
+const author: string = 'github-actions[bot]';
 
 export async function getTargetState(
   octokit: github.GitHub,
@@ -60,7 +66,7 @@ export async function getTargetState(
 
     // If comment exists, update comment
     for (const previousComment of existing) {
-      var isActive = true; //  previousComment.Reactions.Confused > 0;
+      const isActive = isActiveComment(previousComment);
 
       if (!isApplicable && isActive) {
         // Still active but not applicable
@@ -103,12 +109,21 @@ export async function writeComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
-    await octokit.issues.createComment({
+    const pullRequestComment = await octokit.issues.createComment({
       repo: context.repo,
       owner: context.owner,
       issue_number: context.pullRequest.number,
       body: comment.markdown
     });
+
+    for (const reaction of Active) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: pullRequestComment.data.id,
+        content: reaction
+      });
+    }
   }
 }
 
@@ -116,18 +131,28 @@ export async function resolveComments(
   octokit: github.GitHub,
   comments: PullRequestComment[]
 ): Promise<void> {
-  // const octokit = new Octokit({
-  //   previews: ["mercy-preview"]
-  // });
-  // const {
-  //   data: { topics }
-  // } = await octokit.repos.get({
-  //   owner: "octokit",
-  //   repo: "rest.js",
-  //   mediaType: {
-  //     previews: ["symmetra"]
-  //   }
-  // });
+  core.debug(`writing ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    // TODO: Clear canned text
+    for (const reaction of Closed) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: comment.id,
+        content: reaction
+      });
+    }
+  }
 }
 
 export async function reactivateComments(
@@ -255,10 +280,27 @@ async function getExistingComments(
     issue_number: context.pullRequest.number
   });
 
-  return comments.data.map(c => ({
-    body: c.body,
-    author: c.user.login,
-    id: c.id,
-    reactions: (c as any).reactions
-  }));
+  return comments.data
+    .filter(c => c.user.login === author)
+    .map(c => ({
+      body: c.body,
+      author: c.user.login,
+      id: c.id,
+      reactions: (c as any).reactions
+    }));
+}
+
+function isActiveComment(comment: PullRequestComment): boolean {
+  let isActive = true;
+  // ensure all 'active'y reactions are there
+  for (const active of Active) {
+    isActive && comment.reactions[active] > 0;
+  }
+
+  // ensure all 'closed'y reactions are not there
+  for (const closed of Closed) {
+    isActive && comment.reactions[closed] === 0;
+  }
+
+  return isActive;
 }
