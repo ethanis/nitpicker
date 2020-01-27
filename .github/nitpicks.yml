@@ -8,7 +8,7 @@
     Read more about this change [here](https://www.nuget.org/).
   blocking: true
   pathFilter:
-    - '**/*.dll'
+    - '+**/*.dll'
 - markdown: |
     ## Information
     You modified a file that controls the payment processing for the company. Please ensure that you have completed all of the following:
