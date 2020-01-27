@@ -8,8 +8,7 @@ import {
   ChangeType,
   Change,
   Closed,
-  Active,
-  Reaction
+  Active
 } from '../models';
 import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
@@ -131,7 +130,7 @@ export async function resolveComments(
   octokit: github.GitHub,
   comments: PullRequestComment[]
 ): Promise<void> {
-  core.debug(`writing ${comments.length} comments`);
+  core.debug(`resolving ${comments.length} comments`);
 
   const context = parseContext();
 
@@ -143,13 +142,43 @@ export async function resolveComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
+    const reactions = await octokit.reactions.listForIssueComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.id
+    });
+
+    console.log('all reactions', reactions.data);
+
+    const nitpickerReactions = reactions.data.filter(
+      x => x.user.login === author
+    );
+
+    console.log('nitpicker reactions', nitpickerReactions);
+
+    const reactionsToAdd = [...Closed];
+    const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
+    for (const reaction of nitpickerReactions) {
+      // Delete 'active' comments
+      if (Active.some(x => x === reaction.content)) {
+        reactionsToDelete.push(reaction);
+        continue;
+      }
+    }
+
     // TODO: Clear canned text
-    for (const reaction of Closed) {
+    for (const reaction of reactionsToAdd) {
       await octokit.reactions.createForIssueComment({
         repo: context.repo,
         owner: context.owner,
         comment_id: comment.id,
         content: reaction
+      });
+    }
+
+    for (const reaction of reactionsToDelete) {
+      await octokit.reactions.delete({
+        reaction_id: reaction.id
       });
     }
   }
@@ -158,7 +187,60 @@ export async function resolveComments(
 export async function reactivateComments(
   octokit: github.GitHub,
   comments: PullRequestComment[]
-): Promise<void> {}
+): Promise<void> {
+  core.debug(`reactivating ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    const reactions = await octokit.reactions.listForIssueComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.id
+    });
+
+    console.log('all reactions', reactions.data);
+
+    const nitpickerReactions = reactions.data.filter(
+      x => x.user.login === author
+    );
+
+    console.log('nitpicker reactions', nitpickerReactions);
+
+    const reactionsToAdd = [...Active];
+    const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
+    for (const reaction of nitpickerReactions) {
+      // Delete 'closed' comments
+      if (Closed.some(x => x === reaction.content)) {
+        reactionsToDelete.push(reaction);
+        continue;
+      }
+    }
+
+    // TODO: Clear canned text
+    for (const reaction of reactionsToAdd) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: comment.id,
+        content: reaction
+      });
+    }
+
+    for (const reaction of reactionsToDelete) {
+      await octokit.reactions.delete({
+        reaction_id: reaction.id
+      });
+    }
+  }
+}
 
 function getApplicableComments(
   allComments: Comment[],

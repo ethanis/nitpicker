@@ -14,10 +14,17 @@ export interface PullRequestComment {
 export interface Reactions {
   url: string;
   total_count: number;
-  [key: string]: number | string;
+  '+1': number;
+  '-1': number;
+  laugh: number;
+  confused: number;
+  heart: number;
+  hooray: number;
+  rocket: number;
+  eyes: number;
 }
 
-export enum Reaction {
+enum Reaction {
   plusOne = '+1',
   minusOne = '-1',
   laugh = 'laugh',
