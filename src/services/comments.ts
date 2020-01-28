@@ -64,8 +64,6 @@ export async function getTargetState(
     // If comment exists, update comment
     for (const previousComment of existing) {
       const isActive = isActiveComment(previousComment);
-      console.log(previousComment);
-      console.log('isActive', isActive);
 
       if (!isApplicable && isActive) {
         // Still active but not applicable
