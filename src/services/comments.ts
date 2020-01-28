@@ -364,16 +364,16 @@ async function getExistingComments(
     }));
 }
 
-function isActiveComment(comment: PullRequestComment): boolean {
+export function isActiveComment(comment: PullRequestComment): boolean {
   let isActive = true;
   // ensure all 'active'y reactions are there
   for (const active of Active) {
-    isActive && comment.reactions[active] > 0;
+    isActive = isActive && comment.reactions[active] > 0;
   }
 
   // ensure all 'closed'y reactions are not there
   for (const closed of Closed) {
-    isActive && comment.reactions[closed] === 0;
+    isActive = isActive && comment.reactions[closed] === 0;
   }
 
   return isActive;
