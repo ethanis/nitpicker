@@ -1,13 +1,24 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
-import { Comment, PullRequestComment, Conclusion } from '../models';
+import * as octokit from '@octokit/rest';
+import {
+  Comment,
+  PullRequestComment,
+  Conclusion,
+  ChangeType,
+  Change,
+  Closed,
+  Active
+} from '../models';
 import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
+
+const author: string = 'github-actions[bot]';
 
 export async function getTargetState(
   octokit: github.GitHub,
   allComments: Comment[],
-  changedFiles: string[]
+  changes: Change[]
 ): Promise<{
   commentsToAdd: Comment[];
   commentsToReactivate: PullRequestComment[];
@@ -26,7 +37,7 @@ export async function getTargetState(
 
   const applicableComments: Comment[] = getApplicableComments(
     allComments,
-    changedFiles
+    changes
   );
 
   for (const comment of allComments) {
@@ -52,7 +63,7 @@ export async function getTargetState(
 
     // If comment exists, update comment
     for (const previousComment of existing) {
-      var isActive = true; //  previousComment.Reactions.Confused > 0;
+      const isActive = isActiveComment(previousComment);
 
       if (!isApplicable && isActive) {
         // Still active but not applicable
@@ -83,6 +94,7 @@ export async function writeComments(
   if (!context.pullRequest) {
     core.debug('we will only nitpick pull requests');
 
+    // Write matched comments out to build log
     for (const comment of comments) {
       console.log('Matched comment: ');
       console.log(comment.markdown);
@@ -92,13 +104,23 @@ export async function writeComments(
     return;
   }
 
+  // Write matched comments to pull request
   for (const comment of comments) {
-    await octokit.issues.createComment({
+    const pullRequestComment = await octokit.issues.createComment({
       repo: context.repo,
       owner: context.owner,
       issue_number: context.pullRequest.number,
       body: comment.markdown
     });
+
+    for (const reaction of Active) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: pullRequestComment.data.id,
+        content: reaction
+      });
+    }
   }
 }
 
@@ -106,59 +128,206 @@ export async function resolveComments(
   octokit: github.GitHub,
   comments: PullRequestComment[]
 ): Promise<void> {
-  // const octokit = new Octokit({
-  //   previews: ["mercy-preview"]
-  // });
-  // const {
-  //   data: { topics }
-  // } = await octokit.repos.get({
-  //   owner: "octokit",
-  //   repo: "rest.js",
-  //   mediaType: {
-  //     previews: ["symmetra"]
-  //   }
-  // });
+  core.debug(`resolving ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    const reactions = await octokit.reactions.listForIssueComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.id
+    });
+
+    const nitpickerReactions = reactions.data.filter(
+      x => x.user.login === author
+    );
+
+    const reactionsToAdd = [...Closed];
+    const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
+    for (const reaction of nitpickerReactions) {
+      // Delete 'active' comments
+      if (Active.some(x => x === reaction.content)) {
+        reactionsToDelete.push(reaction);
+        continue;
+      }
+    }
+
+    // TODO: Clear canned text
+    for (const reaction of reactionsToAdd) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: comment.id,
+        content: reaction
+      });
+    }
+
+    for (const reaction of reactionsToDelete) {
+      await octokit.reactions.delete({
+        reaction_id: reaction.id
+      });
+    }
+  }
 }
 
 export async function reactivateComments(
   octokit: github.GitHub,
   comments: PullRequestComment[]
-): Promise<void> {}
+): Promise<void> {
+  core.debug(`reactivating ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    const reactions = await octokit.reactions.listForIssueComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.id
+    });
+
+    const nitpickerReactions = reactions.data.filter(
+      x => x.user.login === author
+    );
+
+    const reactionsToAdd = [...Active];
+    const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
+    for (const reaction of nitpickerReactions) {
+      // Delete 'closed' comments
+      if (Closed.some(x => x === reaction.content)) {
+        reactionsToDelete.push(reaction);
+        continue;
+      }
+    }
+
+    // TODO: Clear canned text
+    for (const reaction of reactionsToAdd) {
+      await octokit.reactions.createForIssueComment({
+        repo: context.repo,
+        owner: context.owner,
+        comment_id: comment.id,
+        content: reaction
+      });
+    }
+
+    for (const reaction of reactionsToDelete) {
+      await octokit.reactions.delete({
+        reaction_id: reaction.id
+      });
+    }
+  }
+}
 
 function getApplicableComments(
   allComments: Comment[],
-  changedFiles: string[]
+  changes: Change[]
 ): Comment[] {
   const applicableComments: Comment[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
   for (const comment of allComments) {
-    let matchedComment = false;
+    const inclusions: string[] = [];
+    const exclusions: string[] = [];
 
     for (const pathFilter of comment.pathFilter) {
-      core.debug(` checking pattern ${pathFilter}`);
-
-      if (pathFilter === '*') {
-        applicableComments.push(comment);
-        matchedComment = true;
-        break;
+      if (pathFilter.startsWith('!')) {
+        exclusions.push(pathFilter.substring(1));
+      } else {
+        inclusions.push(pathFilter);
       }
+    }
 
-      const matcher = new Minimatch(pathFilter, options);
+    for (const change of changes) {
+      let isMatch = false;
 
-      for (const changedFile of changedFiles) {
-        core.debug(` - ${changedFile}`);
-        if (matcher.match(changedFile)) {
-          applicableComments.push(comment);
-          matchedComment = true;
-          core.debug(` ${changedFile} matches`);
+      // Match inclusions first
+      for (const inclusion of inclusions) {
+        core.debug(` checking pattern ${inclusion}`);
 
-          break;
+        let changeType: ChangeType;
+        let pattern = inclusion;
+
+        switch (inclusion[0]) {
+          case '+':
+            changeType = ChangeType.add;
+            pattern = inclusion.substring(1);
+            break;
+          case '-':
+            changeType = ChangeType.delete;
+            pattern = inclusion.substring(1);
+            break;
+          case '~':
+            changeType = ChangeType.edit;
+            pattern = inclusion.substring(1);
+            break;
+          default:
+            changeType = ChangeType.any;
+            break;
+        }
+
+        const matcher = new Minimatch(pattern, options);
+        core.debug(` - ${change.file}`);
+
+        const matched = pattern === '*' ? true : matcher.match(change.file);
+
+        if (matched) {
+          switch (changeType) {
+            case ChangeType.add:
+              isMatch = change.changeType == ChangeType.add;
+              break;
+            case ChangeType.delete:
+              isMatch = change.changeType == ChangeType.delete;
+              break;
+            case ChangeType.edit:
+              isMatch =
+                change.changeType !== ChangeType.add &&
+                change.changeType !== ChangeType.delete;
+              break;
+            case ChangeType.any:
+              isMatch = true;
+              break;
+          }
         }
       }
 
-      if (matchedComment) {
+      // If no inclusions match this file path, continue on to the next change
+      if (!isMatch) {
+        continue;
+      }
+
+      // Check if any exclusion should filter out the match
+      for (const exclusion in exclusions) {
+        // First exclusion to match will negate the inclusion match
+        const matcher = new Minimatch(exclusion, options);
+        const match = matcher.match(change.file);
+
+        // If not a match, no need to negate the inclusive pattern
+        if (!match) {
+          continue;
+        }
+
+        // If this was a match, we need to negate the inclusive pattern
+        isMatch = false;
         break;
+      }
+
+      // If we've made it this far, comment is good to go
+      if (isMatch) {
+        applicableComments.push(comment);
       }
     }
   }
@@ -183,9 +352,27 @@ async function getExistingComments(
     issue_number: context.pullRequest.number
   });
 
-  return comments.data.map(c => ({
-    body: c.body,
-    author: c.user.login,
-    id: c.id
-  }));
+  return comments.data
+    .filter(c => c.user.login === author)
+    .map(c => ({
+      body: c.body,
+      author: c.user.login,
+      id: c.id,
+      reactions: (c as any).reactions
+    }));
+}
+
+export function isActiveComment(comment: PullRequestComment): boolean {
+  let isActive = true;
+  // ensure all 'active'y reactions are there
+  for (const active of Active) {
+    isActive = isActive && comment.reactions[active] > 0;
+  }
+
+  // ensure all 'closed'y reactions are not there
+  for (const closed of Closed) {
+    isActive = isActive && comment.reactions[closed] === 0;
+  }
+
+  return isActive;
 }
