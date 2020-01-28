@@ -35,8 +35,6 @@ export async function getTargetState(
     octokit
   );
 
-  console.log(existingComments);
-
   const applicableComments: Comment[] = getApplicableComments(
     allComments,
     changes
@@ -66,6 +64,8 @@ export async function getTargetState(
     // If comment exists, update comment
     for (const previousComment of existing) {
       const isActive = isActiveComment(previousComment);
+      console.log(previousComment);
+      console.log('isActive', isActive);
 
       if (!isApplicable && isActive) {
         // Still active but not applicable
@@ -148,13 +148,9 @@ export async function resolveComments(
       comment_id: comment.id
     });
 
-    console.log('all reactions', reactions.data);
-
     const nitpickerReactions = reactions.data.filter(
       x => x.user.login === author
     );
-
-    console.log('nitpicker reactions', nitpickerReactions);
 
     const reactionsToAdd = [...Closed];
     const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
@@ -206,13 +202,9 @@ export async function reactivateComments(
       comment_id: comment.id
     });
 
-    console.log('all reactions', reactions.data);
-
     const nitpickerReactions = reactions.data.filter(
       x => x.user.login === author
     );
-
-    console.log('nitpicker reactions', nitpickerReactions);
 
     const reactionsToAdd = [...Active];
     const reactionsToDelete: octokit.ReactionsListForIssueCommentResponseItem[] = [];
