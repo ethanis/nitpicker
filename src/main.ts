@@ -8,7 +8,8 @@ import {
   resolveComments,
   reactivateComments,
   startCheck,
-  completeCheck
+  completeCheck,
+  updateComments
 } from './services';
 import { Change } from './models';
 
@@ -54,7 +55,8 @@ async function run() {
     await Promise.all([
       writeComments(octokit, targetState.commentsToAdd),
       resolveComments(octokit, targetState.commentsToResolve),
-      reactivateComments(octokit, targetState.commentsToReactivate)
+      reactivateComments(octokit, targetState.commentsToReactivate),
+      updateComments(octokit, targetState.commentsToUpdate)
     ]);
 
     await completeCheck(octokit, checkRun.id, targetState.conclusion);

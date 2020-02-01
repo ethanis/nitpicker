@@ -14,7 +14,8 @@ import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
 
 const author: string = 'github-actions[bot]';
-const cannedTextSeparator: string = '\n--------------\nCaused by:\n';
+const cannedTextSeparator: string = '\n--------------\n_Caused by:_\n';
+const resolvedText: string = '\n--------------\n_Resolved_\n';
 
 interface MatchResult<T> {
   comment: T;
@@ -29,11 +30,13 @@ export async function getTargetState(
   commentsToAdd: MatchResult<Comment>[];
   commentsToReactivate: MatchResult<PullRequestComment>[];
   commentsToResolve: MatchResult<PullRequestComment>[];
+  commentsToUpdate: MatchResult<PullRequestComment>[];
   conclusion: Conclusion;
 }> {
   const commentsToAdd: MatchResult<Comment>[] = [];
   const commentsToReactivate: MatchResult<PullRequestComment>[] = [];
   const commentsToResolve: MatchResult<PullRequestComment>[] = [];
+  const commentsToUpdate: MatchResult<PullRequestComment>[] = [];
 
   let conclusion: Conclusion = 'success';
 
@@ -76,8 +79,13 @@ export async function getTargetState(
           comment: previousComment,
           matches: matches
         });
+      } else {
+        // Still active and applicable
+        commentsToUpdate.push({
+          comment: previousComment,
+          matches: matches
+        });
       }
-      // TODO: Add comments to update prop
     }
   }
 
@@ -85,6 +93,7 @@ export async function getTargetState(
     commentsToAdd: commentsToAdd,
     commentsToReactivate: commentsToReactivate,
     commentsToResolve: commentsToResolve,
+    commentsToUpdate: commentsToUpdate,
     conclusion: conclusion
   };
 }
@@ -139,6 +148,51 @@ export async function writeComments(
   }
 }
 
+export async function updateComments(
+  octokit: github.GitHub,
+  comments: MatchResult<PullRequestComment>[]
+): Promise<void> {
+  core.debug(`updating ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    // Write matched comments out to build log
+    for (const comment of comments) {
+      console.log('Matched comment: ');
+      console.log(comment.comment.body);
+      console.log();
+    }
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    const body = getCommentBody(
+      comment.comment.body,
+      comment.matches,
+      context.pullRequest?.number ?? 0,
+      context.owner,
+      context.repo
+    );
+
+    // If we don't need to update canned text
+    if (body === comment.comment.body) {
+      continue;
+    }
+
+    await octokit.issues.updateComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.comment.id,
+      body: body
+    });
+  }
+}
+
 export async function resolveComments(
   octokit: github.GitHub,
   comments: MatchResult<PullRequestComment>[]
@@ -155,6 +209,22 @@ export async function resolveComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
+    const cannedTextIndex = comment.comment.body.lastIndexOf(
+      cannedTextSeparator
+    );
+
+    const body = `${comment.comment.body.substring(
+      0,
+      cannedTextIndex
+    )}${resolvedText}`;
+
+    await octokit.issues.updateComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.comment.id,
+      body: body
+    });
+
     const reactions = await octokit.reactions.listForIssueComment({
       repo: context.repo,
       owner: context.owner,
@@ -209,6 +279,26 @@ export async function reactivateComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
+    const cannedTextIndex = comment.comment.body.lastIndexOf(
+      cannedTextSeparator
+    );
+    const markdown = comment.comment.body.substring(0, cannedTextIndex);
+
+    const body = getCommentBody(
+      markdown,
+      comment.matches,
+      context.pullRequest.number,
+      context.owner,
+      context.repo
+    );
+
+    await octokit.issues.updateComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.comment.id,
+      body: body
+    });
+
     const reactions = await octokit.reactions.listForIssueComment({
       repo: context.repo,
       owner: context.owner,
