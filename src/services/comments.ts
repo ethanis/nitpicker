@@ -112,18 +112,14 @@ export async function writeComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
-    const body = `${
-      comment.comment.markdown
-    }${cannedTextSeparator}${comment.matches.map(
-      m =>
-        `${getCommentBody(
-          comment.comment.markdown,
-          comment.matches,
-          context.pullRequest?.number ?? 0,
-          context.owner,
-          context.repo
-        )}`
-    )}`;
+    const body = getCommentBody(
+      comment.comment.markdown,
+      comment.matches,
+      context.pullRequest?.number ?? 0,
+      context.owner,
+      context.repo
+    );
+
     // todo: linkify
     const pullRequestComment = await octokit.issues.createComment({
       repo: context.repo,
