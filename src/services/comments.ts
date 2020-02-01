@@ -14,6 +14,7 @@ import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
 
 const author: string = 'github-actions[bot]';
+const cannedTextSeparator: string = '\n--------------\nCaused by:\n';
 
 interface MatchResult<T> {
   comment: T;
@@ -40,21 +41,14 @@ export async function getTargetState(
     octokit
   );
 
-  // const applicableComments = getApplicableComments(allComments, changes);
-
   for (const comment of allComments) {
-    // const isApplicable =
-    //   applicableComments.filter(
-    //     c =>
-    //       c.comment.markdown === comment.markdown &&
-    //       c.comment.pathFilter === comment.pathFilter
-    //   )?.length > 0;
-
     const matches = isCommentApplicable(comment, changes);
     const isApplicable = matches.length > 0;
 
-    // TODO: Starts with comment.markdown
-    const existing = existingComments.filter(c => c.body === comment.markdown);
+    const commentMatchText = `${comment.markdown}${cannedTextSeparator}`;
+    const existing = existingComments.filter(c =>
+      c.body.startsWith(commentMatchText)
+    );
 
     if (comment.blocking && isApplicable) {
       conclusion = 'failure';
@@ -120,7 +114,16 @@ export async function writeComments(
   for (const comment of comments) {
     const body = `${
       comment.comment.markdown
-    }\n------------\nCaused by:\n${comment.matches.map(m => ` - ${m}\n`)}`;
+    }${cannedTextSeparator}${comment.matches.map(
+      m =>
+        `${getCommentBody(
+          comment.comment.markdown,
+          comment.matches,
+          context.pullRequest?.number ?? 0,
+          context.owner,
+          context.repo
+        )}`
+    )}`;
     // todo: linkify
     const pullRequestComment = await octokit.issues.createComment({
       repo: context.repo,
@@ -386,4 +389,17 @@ export function isActiveComment(comment: PullRequestComment): boolean {
   }
 
   return isActive;
+}
+
+function getCommentBody(
+  markdown: string,
+  files: string[],
+  prNumber: number,
+  owner: string,
+  repo: string
+): string {
+  return `${markdown}${cannedTextSeparator}${files.map(
+    m =>
+      ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)\n`
+  )}`;
 }
