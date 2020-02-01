@@ -15,19 +15,24 @@ import { parseContext } from './context';
 
 const author: string = 'github-actions[bot]';
 
+interface MatchResult<T> {
+  comment: T;
+  matches: string[];
+}
+
 export async function getTargetState(
   octokit: github.GitHub,
   allComments: Comment[],
   changes: Change[]
 ): Promise<{
-  commentsToAdd: Comment[];
-  commentsToReactivate: PullRequestComment[];
-  commentsToResolve: PullRequestComment[];
+  commentsToAdd: MatchResult<Comment>[];
+  commentsToReactivate: MatchResult<PullRequestComment>[];
+  commentsToResolve: MatchResult<PullRequestComment>[];
   conclusion: Conclusion;
 }> {
-  const commentsToAdd: Comment[] = [];
-  const commentsToReactivate: PullRequestComment[] = [];
-  const commentsToResolve: PullRequestComment[] = [];
+  const commentsToAdd: MatchResult<Comment>[] = [];
+  const commentsToReactivate: MatchResult<PullRequestComment>[] = [];
+  const commentsToResolve: MatchResult<PullRequestComment>[] = [];
 
   let conclusion: Conclusion = 'success';
 
@@ -35,17 +40,20 @@ export async function getTargetState(
     octokit
   );
 
-  const applicableComments: Comment[] = getApplicableComments(
-    allComments,
-    changes
-  );
+  // const applicableComments = getApplicableComments(allComments, changes);
 
   for (const comment of allComments) {
-    const isApplicable =
-      applicableComments.filter(
-        c =>
-          c.markdown === comment.markdown && c.pathFilter === comment.pathFilter
-      )?.length > 0;
+    // const isApplicable =
+    //   applicableComments.filter(
+    //     c =>
+    //       c.comment.markdown === comment.markdown &&
+    //       c.comment.pathFilter === comment.pathFilter
+    //   )?.length > 0;
+
+    const matches = isCommentApplicable(comment, changes);
+    const isApplicable = matches.length > 0;
+
+    // TODO: Starts with comment.markdown
     const existing = existingComments.filter(c => c.body === comment.markdown);
 
     if (comment.blocking && isApplicable) {
@@ -54,7 +62,7 @@ export async function getTargetState(
 
     // If there's no existing comments on the pull request, add to new target if applicable
     if (existing.length === 0 && isApplicable) {
-      commentsToAdd.push(comment);
+      commentsToAdd.push({ comment: comment, matches: matches });
     }
 
     if (existing.length === 0) {
@@ -67,11 +75,15 @@ export async function getTargetState(
 
       if (!isApplicable && isActive) {
         // Still active but not applicable
-        commentsToResolve.push(previousComment);
+        commentsToResolve.push({ comment: previousComment, matches: matches });
       } else if (isApplicable && !isActive && comment.blocking) {
         // Not active, but applicable AND blocking
-        commentsToReactivate.push(previousComment);
+        commentsToReactivate.push({
+          comment: previousComment,
+          matches: matches
+        });
       }
+      // TODO: Add comments to update prop
     }
   }
 
@@ -85,7 +97,7 @@ export async function getTargetState(
 
 export async function writeComments(
   octokit: github.GitHub,
-  comments: Comment[]
+  comments: MatchResult<Comment>[]
 ): Promise<void> {
   core.debug(`writing ${comments.length} comments`);
 
@@ -97,7 +109,7 @@ export async function writeComments(
     // Write matched comments out to build log
     for (const comment of comments) {
       console.log('Matched comment: ');
-      console.log(comment.markdown);
+      console.log(comment.comment.markdown);
       console.log();
     }
 
@@ -106,11 +118,15 @@ export async function writeComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
+    const body = `${
+      comment.comment.markdown
+    }\n------------\nCaused by:\n${comment.matches.map(m => ` - ${m}\n`)}`;
+    // todo: linkify
     const pullRequestComment = await octokit.issues.createComment({
       repo: context.repo,
       owner: context.owner,
       issue_number: context.pullRequest.number,
-      body: comment.markdown
+      body: body
     });
 
     for (const reaction of Active) {
@@ -126,7 +142,7 @@ export async function writeComments(
 
 export async function resolveComments(
   octokit: github.GitHub,
-  comments: PullRequestComment[]
+  comments: MatchResult<PullRequestComment>[]
 ): Promise<void> {
   core.debug(`resolving ${comments.length} comments`);
 
@@ -143,7 +159,7 @@ export async function resolveComments(
     const reactions = await octokit.reactions.listForIssueComment({
       repo: context.repo,
       owner: context.owner,
-      comment_id: comment.id
+      comment_id: comment.comment.id
     });
 
     const nitpickerReactions = reactions.data.filter(
@@ -165,7 +181,7 @@ export async function resolveComments(
       await octokit.reactions.createForIssueComment({
         repo: context.repo,
         owner: context.owner,
-        comment_id: comment.id,
+        comment_id: comment.comment.id,
         content: reaction
       });
     }
@@ -180,7 +196,7 @@ export async function resolveComments(
 
 export async function reactivateComments(
   octokit: github.GitHub,
-  comments: PullRequestComment[]
+  comments: MatchResult<PullRequestComment>[]
 ): Promise<void> {
   core.debug(`reactivating ${comments.length} comments`);
 
@@ -197,7 +213,7 @@ export async function reactivateComments(
     const reactions = await octokit.reactions.listForIssueComment({
       repo: context.repo,
       owner: context.owner,
-      comment_id: comment.id
+      comment_id: comment.comment.id
     });
 
     const nitpickerReactions = reactions.data.filter(
@@ -219,7 +235,7 @@ export async function reactivateComments(
       await octokit.reactions.createForIssueComment({
         repo: context.repo,
         owner: context.owner,
-        comment_id: comment.id,
+        comment_id: comment.comment.id,
         content: reaction
       });
     }
@@ -232,107 +248,102 @@ export async function reactivateComments(
   }
 }
 
-function getApplicableComments(
-  allComments: Comment[],
-  changes: Change[]
-): Comment[] {
-  const applicableComments: Comment[] = [];
+function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
+  const results: string[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
-  for (const comment of allComments) {
-    const inclusions: string[] = [];
-    const exclusions: string[] = [];
+  const inclusions: string[] = [];
+  const exclusions: string[] = [];
 
-    for (const pathFilter of comment.pathFilter) {
-      if (pathFilter.startsWith('!')) {
-        exclusions.push(pathFilter.substring(1));
-      } else {
-        inclusions.push(pathFilter);
-      }
-    }
-
-    for (const change of changes) {
-      let isMatch = false;
-
-      // Match inclusions first
-      for (const inclusion of inclusions) {
-        core.debug(` checking pattern ${inclusion}`);
-
-        let changeType: ChangeType;
-        let pattern = inclusion;
-
-        switch (inclusion[0]) {
-          case '+':
-            changeType = ChangeType.add;
-            pattern = inclusion.substring(1);
-            break;
-          case '-':
-            changeType = ChangeType.delete;
-            pattern = inclusion.substring(1);
-            break;
-          case '~':
-            changeType = ChangeType.edit;
-            pattern = inclusion.substring(1);
-            break;
-          default:
-            changeType = ChangeType.any;
-            break;
-        }
-
-        const matcher = new Minimatch(pattern, options);
-        core.debug(` - ${change.file}`);
-
-        const matched = pattern === '*' ? true : matcher.match(change.file);
-
-        if (matched) {
-          switch (changeType) {
-            case ChangeType.add:
-              isMatch = change.changeType == ChangeType.add;
-              break;
-            case ChangeType.delete:
-              isMatch = change.changeType == ChangeType.delete;
-              break;
-            case ChangeType.edit:
-              isMatch =
-                change.changeType !== ChangeType.add &&
-                change.changeType !== ChangeType.delete;
-              break;
-            case ChangeType.any:
-              isMatch = true;
-              break;
-          }
-        }
-      }
-
-      // If no inclusions match this file path, continue on to the next change
-      if (!isMatch) {
-        continue;
-      }
-
-      // Check if any exclusion should filter out the match
-      for (const exclusion in exclusions) {
-        // First exclusion to match will negate the inclusion match
-        const matcher = new Minimatch(exclusion, options);
-        const match = matcher.match(change.file);
-
-        // If not a match, no need to negate the inclusive pattern
-        if (!match) {
-          continue;
-        }
-
-        // If this was a match, we need to negate the inclusive pattern
-        isMatch = false;
-        break;
-      }
-
-      // If we've made it this far, comment is good to go
-      if (isMatch) {
-        applicableComments.push(comment);
-      }
+  for (const pathFilter of comment.pathFilter) {
+    if (pathFilter.startsWith('!')) {
+      exclusions.push(pathFilter.substring(1));
+    } else {
+      inclusions.push(pathFilter);
     }
   }
 
-  return applicableComments;
+  for (const change of changes) {
+    let isMatch = false;
+
+    // Match inclusions first
+    for (const inclusion of inclusions) {
+      core.debug(` checking pattern ${inclusion}`);
+
+      let changeType: ChangeType;
+      let pattern = inclusion;
+
+      switch (inclusion[0]) {
+        case '+':
+          changeType = ChangeType.add;
+          pattern = inclusion.substring(1);
+          break;
+        case '-':
+          changeType = ChangeType.delete;
+          pattern = inclusion.substring(1);
+          break;
+        case '~':
+          changeType = ChangeType.edit;
+          pattern = inclusion.substring(1);
+          break;
+        default:
+          changeType = ChangeType.any;
+          break;
+      }
+
+      const matcher = new Minimatch(pattern, options);
+      core.debug(` - ${change.file}`);
+
+      const matched = pattern === '*' ? true : matcher.match(change.file);
+
+      if (matched) {
+        switch (changeType) {
+          case ChangeType.add:
+            isMatch = change.changeType == ChangeType.add;
+            break;
+          case ChangeType.delete:
+            isMatch = change.changeType == ChangeType.delete;
+            break;
+          case ChangeType.edit:
+            isMatch =
+              change.changeType !== ChangeType.add &&
+              change.changeType !== ChangeType.delete;
+            break;
+          case ChangeType.any:
+            isMatch = true;
+            break;
+        }
+      }
+    }
+
+    // If no inclusions match this file path, continue on to the next change
+    if (!isMatch) {
+      continue;
+    }
+
+    // Check if any exclusion should filter out the match
+    for (const exclusion in exclusions) {
+      // First exclusion to match will negate the inclusion match
+      const matcher = new Minimatch(exclusion, options);
+      const match = matcher.match(change.file);
+
+      // If not a match, no need to negate the inclusive pattern
+      if (!match) {
+        continue;
+      }
+
+      // If this was a match, we need to negate the inclusive pattern
+      isMatch = false;
+      break;
+    }
+
+    // If we've made it this far, comment is good to go
+    if (isMatch) {
+      results.push(change.file);
+    }
+  }
+
+  return results;
 }
 
 async function getExistingComments(
