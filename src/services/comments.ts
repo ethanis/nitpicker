@@ -171,8 +171,12 @@ export async function updateComments(
 
   // Write matched comments to pull request
   for (const comment of comments) {
+    const cannedTextIndex = comment.comment.body.lastIndexOf(
+      cannedTextSeparator
+    );
+
     const body = getCommentBody(
-      comment.comment.body,
+      comment.comment.body.substring(0, cannedTextIndex),
       comment.matches,
       context.pullRequest?.number ?? 0,
       context.owner,
