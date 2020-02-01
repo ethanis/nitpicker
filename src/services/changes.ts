@@ -37,6 +37,7 @@ async function getChangesFromSha(octokit: github.GitHub): Promise<Change[]> {
 
   const changes = listFilesResponse.data.files.map(f => ({
     file: f.filename,
+    sha: f.sha,
     changeType: parseStatus(f.status)
   }));
 
@@ -62,6 +63,7 @@ async function getChangesFromPR(octokit: github.GitHub): Promise<Change[]> {
 
   const changes = listFilesResponse.data.map(f => ({
     file: f.filename,
+    sha: f.sha,
     changeType: parseStatus(f.status)
   }));
 

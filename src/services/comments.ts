@@ -19,7 +19,7 @@ const resolvedText: string = '\n--------------\n_Resolved_\n';
 
 interface MatchResult<T> {
   comment: T;
-  matches: string[];
+  matches: Change[];
 }
 
 export async function getTargetState(
@@ -341,8 +341,8 @@ export async function reactivateComments(
   }
 }
 
-function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
-  const results: string[] = [];
+function isCommentApplicable(comment: Comment, changes: Change[]): Change[] {
+  const results: Change[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
   const inclusions: string[] = [];
@@ -432,7 +432,7 @@ function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
 
     // If we've made it this far, comment is good to go
     if (isMatch) {
-      results.push(change.file);
+      results.push(change);
     }
   }
 
@@ -483,7 +483,7 @@ export function isActiveComment(comment: PullRequestComment): boolean {
 
 function getCommentBody(
   markdown: string,
-  files: string[],
+  files: Change[],
   prNumber: number,
   owner: string,
   repo: string
@@ -491,7 +491,7 @@ function getCommentBody(
   return `${markdown}${cannedTextSeparator}${files
     .map(
       m =>
-        ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`
+        ` - [${m.file}](https://github.com/${owner}/${repo}/pull/${prNumber}/files#diff-${m.sha})`
     )
     .join('\n')}`;
 }
