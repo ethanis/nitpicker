@@ -484,8 +484,10 @@ function getCommentBody(
   owner: string,
   repo: string
 ): string {
-  return `${markdown}${cannedTextSeparator}${files.map(
-    m =>
-      ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)\n`
-  )}`;
+  return `${markdown}${cannedTextSeparator}${files
+    .map(
+      m =>
+        ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`
+    )
+    .join('\n')}`;
 }
