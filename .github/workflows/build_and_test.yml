@@ -1,4 +1,4 @@
-name: 'Build and test nitpicker'
+name: Build
 on:
   pull_request:
   push:

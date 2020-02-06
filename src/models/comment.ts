@@ -11,6 +11,11 @@ export interface PullRequestComment {
   reactions: Reactions;
 }
 
+export interface MatchResult<T> {
+  comment: T;
+  matches: string[];
+}
+
 export interface Reactions {
   url: string;
   total_count: number;
