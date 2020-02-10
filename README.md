@@ -14,13 +14,11 @@ Add a new YAML file that specifies the comments to be evaluated during PRs. We r
     - '*'
 - markdown: |
     ## Uh oh
-    Don't check in binaries...we use GitHub package registry for that!
+    Don't check in binaries...we use GitHub Packages for those!
   blocking: true
   pathFilter:
     - '**/*.dll'
 ```
-
-Note, more information on the nitpick syntax can be read about [below]("#path-filters").
 
 Add the Nitpicker action to your workflow and allow access to the `secrets.GITHUB_TOKEN` variable.
 
