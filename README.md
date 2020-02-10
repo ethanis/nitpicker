@@ -79,10 +79,6 @@ Paths prefixed with `-` indicate only _removed_ files will match. For example, `
 
 Paths prefixed with `~` indicate only _edited_ files will match. For example, `~sources/*.nupkg` will match when an existing file with the file extension `.nupkg` is edited in the `sources/` directory, but would not match when a `.nugpkg` file is added or deleted in the `sources/` directory.
 
-Please note the following points about path filters:
-
-- When specifying multiple path filters, _order is important_. The first matching (inclusion or exclusion) path filter will determine if the comment applies to the PR.
-
 ## Development
 
 Install the dependencies
