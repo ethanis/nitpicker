@@ -302,7 +302,6 @@ function getCommentBody(
   owner: string,
   repo: string
 ): string {
-  // TODO: add text if blocking comment
   return `${markdown}${Constants.CannedTextSeparator}${files
     .map(
       m =>
