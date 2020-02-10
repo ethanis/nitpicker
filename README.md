@@ -1,6 +1,6 @@
 # Nitpicker
 
-The Nitpicker is a GitHub Action that lets users specify comments to add to pull requests automatically if a PR contains changes that match a specified file pattern. This helps large teams control code quality and ensure that changes take downstream effects into account. These comments can optionally block a PR from completing until they've been resolved.
+The Nitpicker is a GitHub Action that allows you to configure comments to automatically add to pull requests if a PR contains changes matching a specified file pattern. This helps teams control code quality and ensure that changes take downstream effects into account. These comments can optionally block a PR from completing until they've been resolved.
 
 ## Getting started
 
