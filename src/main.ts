@@ -40,7 +40,7 @@ async function run() {
     }
 
     const octokit = new github.GitHub(token, {
-      previews: ['squirrel-girl']
+      previews: ['squirrel-girl', 'v3.diff']
     });
 
     const eventName = process.env.GITHUB_EVENT_NAME;
