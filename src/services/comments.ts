@@ -4,99 +4,12 @@ import * as octokit from '@octokit/rest';
 import {
   Comment,
   PullRequestComment,
-  Conclusion,
-  ChangeType,
-  Change,
   Closed,
-  Active
+  Active,
+  MatchResult
 } from '../models';
-import { Minimatch, IOptions } from 'minimatch';
 import { parseContext } from './context';
-
-const author: string = 'github-actions[bot]';
-const cannedTextSeparator: string = '\n--------------\n_Caused by:_\n';
-const resolvedText: string = '\n--------------\n_Resolved_\n';
-
-interface MatchResult<T> {
-  comment: T;
-  matches: Change[];
-}
-
-export async function getTargetState(
-  octokit: github.GitHub,
-  allComments: Comment[],
-  changes: Change[]
-): Promise<{
-  commentsToAdd: MatchResult<Comment>[];
-  commentsToReactivate: MatchResult<PullRequestComment>[];
-  commentsToResolve: MatchResult<PullRequestComment>[];
-  commentsToUpdate: MatchResult<PullRequestComment>[];
-  conclusion: Conclusion;
-}> {
-  const commentsToAdd: MatchResult<Comment>[] = [];
-  const commentsToReactivate: MatchResult<PullRequestComment>[] = [];
-  const commentsToResolve: MatchResult<PullRequestComment>[] = [];
-  const commentsToUpdate: MatchResult<PullRequestComment>[] = [];
-
-  let conclusion: Conclusion = 'success';
-
-  const existingComments: PullRequestComment[] = await getExistingComments(
-    octokit
-  );
-
-  for (const comment of allComments) {
-    const matches = isCommentApplicable(comment, changes);
-    const isApplicable = matches.length > 0;
-
-    const commentMatchText = `${comment.markdown}${cannedTextSeparator}`;
-    const existing = existingComments.filter(c =>
-      c.body.startsWith(commentMatchText)
-    );
-
-    if (comment.blocking && isApplicable) {
-      conclusion = 'failure';
-    }
-
-    // If there's no existing comments on the pull request, add to new target if applicable
-    if (existing.length === 0 && isApplicable) {
-      commentsToAdd.push({ comment: comment, matches: matches });
-    }
-
-    if (existing.length === 0) {
-      continue;
-    }
-
-    // If comment exists, update comment
-    for (const previousComment of existing) {
-      const isActive = isActiveComment(previousComment);
-
-      if (!isApplicable && isActive) {
-        // Still active but not applicable
-        commentsToResolve.push({ comment: previousComment, matches: matches });
-      } else if (isApplicable && !isActive && comment.blocking) {
-        // Not active, but applicable AND blocking
-        commentsToReactivate.push({
-          comment: previousComment,
-          matches: matches
-        });
-      } else {
-        // Still active and applicable
-        commentsToUpdate.push({
-          comment: previousComment,
-          matches: matches
-        });
-      }
-    }
-  }
-
-  return {
-    commentsToAdd: commentsToAdd,
-    commentsToReactivate: commentsToReactivate,
-    commentsToResolve: commentsToResolve,
-    commentsToUpdate: commentsToUpdate,
-    conclusion: conclusion
-  };
-}
+import { Constants } from '../constants';
 
 export async function writeComments(
   octokit: github.GitHub,
@@ -172,7 +85,7 @@ export async function updateComments(
   // Write matched comments to pull request
   for (const comment of comments) {
     const cannedTextIndex = comment.comment.body.lastIndexOf(
-      cannedTextSeparator
+      Constants.CannedTextSeparator
     );
 
     const body = getCommentBody(
@@ -214,13 +127,12 @@ export async function resolveComments(
   // Write matched comments to pull request
   for (const comment of comments) {
     const cannedTextIndex = comment.comment.body.lastIndexOf(
-      cannedTextSeparator
+      Constants.CannedTextSeparator
     );
 
-    const body = `${comment.comment.body.substring(
-      0,
-      cannedTextIndex
-    )}${resolvedText}`;
+    const body = `${comment.comment.body.substring(0, cannedTextIndex)}${
+      Constants.ResolvedText
+    }`;
 
     await octokit.issues.updateComment({
       repo: context.repo,
@@ -236,7 +148,7 @@ export async function resolveComments(
     });
 
     const nitpickerReactions = reactions.data.filter(
-      x => x.user.login === author
+      x => x.user.login === Constants.Author
     );
 
     const reactionsToAdd = [...Closed];
@@ -284,7 +196,7 @@ export async function reactivateComments(
   // Write matched comments to pull request
   for (const comment of comments) {
     const cannedTextIndex = comment.comment.body.lastIndexOf(
-      cannedTextSeparator
+      Constants.CannedTextSeparator
     );
     const markdown = comment.comment.body.substring(0, cannedTextIndex);
 
@@ -310,7 +222,7 @@ export async function reactivateComments(
     });
 
     const nitpickerReactions = reactions.data.filter(
-      x => x.user.login === author
+      x => x.user.login === Constants.Author
     );
 
     const reactionsToAdd = [...Active];
@@ -341,105 +253,7 @@ export async function reactivateComments(
   }
 }
 
-function isCommentApplicable(comment: Comment, changes: Change[]): Change[] {
-  const results: Change[] = [];
-  const options: IOptions = { dot: true, nocase: true };
-
-  const inclusions: string[] = [];
-  const exclusions: string[] = [];
-
-  for (const pathFilter of comment.pathFilter) {
-    if (pathFilter.startsWith('!')) {
-      exclusions.push(pathFilter.substring(1));
-    } else {
-      inclusions.push(pathFilter);
-    }
-  }
-
-  for (const change of changes) {
-    let isMatch = false;
-
-    // Match inclusions first
-    for (const inclusion of inclusions) {
-      core.debug(` checking pattern ${inclusion}`);
-
-      let changeType: ChangeType;
-      let pattern = inclusion;
-
-      switch (inclusion[0]) {
-        case '+':
-          changeType = ChangeType.add;
-          pattern = inclusion.substring(1);
-          break;
-        case '-':
-          changeType = ChangeType.delete;
-          pattern = inclusion.substring(1);
-          break;
-        case '~':
-          changeType = ChangeType.edit;
-          pattern = inclusion.substring(1);
-          break;
-        default:
-          changeType = ChangeType.any;
-          break;
-      }
-
-      const matcher = new Minimatch(pattern, options);
-      core.debug(` - ${change.file}`);
-
-      const matched = pattern === '*' ? true : matcher.match(change.file);
-
-      if (matched) {
-        switch (changeType) {
-          case ChangeType.add:
-            isMatch = change.changeType == ChangeType.add;
-            break;
-          case ChangeType.delete:
-            isMatch = change.changeType == ChangeType.delete;
-            break;
-          case ChangeType.edit:
-            isMatch =
-              change.changeType !== ChangeType.add &&
-              change.changeType !== ChangeType.delete;
-            break;
-          case ChangeType.any:
-            isMatch = true;
-            break;
-        }
-      }
-    }
-
-    // If no inclusions match this file path, continue on to the next change
-    if (!isMatch) {
-      continue;
-    }
-
-    // Check if any exclusion should filter out the match
-    for (const exclusion in exclusions) {
-      // First exclusion to match will negate the inclusion match
-      const matcher = new Minimatch(exclusion, options);
-      const match = matcher.match(change.file);
-
-      // If not a match, no need to negate the inclusive pattern
-      if (!match) {
-        continue;
-      }
-
-      // If this was a match, we need to negate the inclusive pattern
-      isMatch = false;
-      break;
-    }
-
-    // If we've made it this far, comment is good to go
-    if (isMatch) {
-      results.push(change);
-    }
-  }
-
-  return results;
-}
-
-async function getExistingComments(
+export async function getExistingComments(
   octokit: github.GitHub
 ): Promise<PullRequestComment[]> {
   const context = parseContext();
@@ -457,7 +271,7 @@ async function getExistingComments(
   });
 
   return comments.data
-    .filter(c => c.user.login === author)
+    .filter(c => c.user.login === Constants.Author)
     .map(c => ({
       body: c.body,
       author: c.user.login,
@@ -488,7 +302,8 @@ function getCommentBody(
   owner: string,
   repo: string
 ): string {
-  return `${markdown}${cannedTextSeparator}${files
+  // TODO: add text if blocking comment
+  return `${markdown}${Constants.CannedTextSeparator}${files
     .map(
       m =>
         ` - [${m.file}](https://github.com/${owner}/${repo}/pull/${prNumber}/files#diff-${m.sha})`
