@@ -88,8 +88,8 @@ export async function getTargetState(
   };
 }
 
-function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
-  const results: string[] = [];
+function isCommentApplicable(comment: Comment, changes: Change[]): Change[] {
+  const results: Change[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
   const inclusions: string[] = [];
@@ -179,7 +179,7 @@ function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
 
     // If we've made it this far, comment is good to go
     if (isMatch) {
-      results.push(change.file);
+      results.push(change);
     }
   }
 

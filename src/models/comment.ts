@@ -1,3 +1,5 @@
+import { Change } from './changes';
+
 export interface Comment {
   pathFilter: string[];
   markdown: string;
@@ -13,7 +15,7 @@ export interface PullRequestComment {
 
 export interface MatchResult<T> {
   comment: T;
-  matches: string[];
+  matches: Change[];
 }
 
 export interface Reactions {

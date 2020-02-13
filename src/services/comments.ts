@@ -6,7 +6,8 @@ import {
   PullRequestComment,
   Closed,
   Active,
-  MatchResult
+  MatchResult,
+  Change
 } from '../models';
 import { parseContext } from './context';
 import { Constants } from '../constants';
