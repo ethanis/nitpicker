@@ -5,11 +5,10 @@ import {
   getChangedFiles,
   writeComments,
   getTargetState,
-  resolveComments,
-  reactivateComments,
   startCheck,
   completeCheck,
-  updateComments
+  updateComments,
+  resolveComments
 } from './services';
 import { Change } from './models';
 
@@ -54,9 +53,8 @@ async function run() {
 
     await Promise.all([
       writeComments(octokit, targetState.commentsToAdd),
-      resolveComments(octokit, targetState.commentsToResolve),
-      reactivateComments(octokit, targetState.commentsToReactivate),
-      updateComments(octokit, targetState.commentsToUpdate)
+      updateComments(octokit, targetState.commentsToUpdate),
+      resolveComments(octokit, targetState.commentsToResolve)
     ]);
 
     await completeCheck(octokit, checkRun.id, targetState.conclusion);
