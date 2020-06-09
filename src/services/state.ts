@@ -8,7 +8,7 @@ import {
   ChangeType,
   Comment
 } from '../models';
-import { getExistingComments, isActiveComment } from '.';
+import { getExistingComments } from '.';
 import { IOptions, Minimatch } from 'minimatch';
 import { Constants } from '../constants';
 
@@ -18,14 +18,10 @@ export async function getTargetState(
   changes: Change[]
 ): Promise<{
   commentsToAdd: MatchResult<Comment>[];
-  commentsToReactivate: MatchResult<PullRequestComment>[];
-  commentsToResolve: MatchResult<PullRequestComment>[];
   commentsToUpdate: MatchResult<PullRequestComment>[];
   conclusion: Conclusion;
 }> {
   const commentsToAdd: MatchResult<Comment>[] = [];
-  const commentsToReactivate: MatchResult<PullRequestComment>[] = [];
-  const commentsToResolve: MatchResult<PullRequestComment>[] = [];
   const commentsToUpdate: MatchResult<PullRequestComment>[] = [];
 
   let conclusion: Conclusion = 'success';
@@ -52,25 +48,10 @@ export async function getTargetState(
       commentsToAdd.push({ comment: comment, matches: matches });
     }
 
-    if (existing.length === 0) {
-      continue;
-    }
-
     // If comment exists, update comment
     for (const previousComment of existing) {
-      const isActive = isActiveComment(previousComment);
-
-      if (!isApplicable && isActive) {
-        // Still active but not applicable
-        commentsToResolve.push({ comment: previousComment, matches: matches });
-      } else if (isApplicable && !isActive && comment.blocking) {
-        // Not active, but applicable AND blocking
-        commentsToReactivate.push({
-          comment: previousComment,
-          matches: matches
-        });
-      } else {
-        // Still active and applicable
+      // Ensure comment canned text is current
+      if (isApplicable) {
         commentsToUpdate.push({
           comment: previousComment,
           matches: matches
@@ -81,8 +62,6 @@ export async function getTargetState(
 
   return {
     commentsToAdd: commentsToAdd,
-    commentsToReactivate: commentsToReactivate,
-    commentsToResolve: commentsToResolve,
     commentsToUpdate: commentsToUpdate,
     conclusion: conclusion
   };
