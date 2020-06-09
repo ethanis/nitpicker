@@ -19,10 +19,12 @@ export async function getTargetState(
 ): Promise<{
   commentsToAdd: MatchResult<Comment>[];
   commentsToUpdate: MatchResult<PullRequestComment>[];
+  commentsToResolve: MatchResult<PullRequestComment>[];
   conclusion: Conclusion;
 }> {
   const commentsToAdd: MatchResult<Comment>[] = [];
   const commentsToUpdate: MatchResult<PullRequestComment>[] = [];
+  const commentsToResolve: MatchResult<PullRequestComment>[] = [];
 
   let conclusion: Conclusion = 'success';
 
@@ -56,6 +58,11 @@ export async function getTargetState(
           comment: previousComment,
           matches: matches
         });
+      } else {
+        commentsToResolve.push({
+          comment: previousComment,
+          matches: matches
+        });
       }
     }
   }
@@ -63,6 +70,7 @@ export async function getTargetState(
   return {
     commentsToAdd: commentsToAdd,
     commentsToUpdate: commentsToUpdate,
+    commentsToResolve: commentsToResolve,
     conclusion: conclusion
   };
 }

@@ -93,6 +93,39 @@ export async function updateComments(
   }
 }
 
+export async function resolveComments(
+  octokit: github.GitHub,
+  comments: MatchResult<PullRequestComment>[]
+): Promise<void> {
+  core.debug(`resolving ${comments.length} comments`);
+
+  const context = parseContext();
+
+  if (!context.pullRequest) {
+    core.debug('we will only nitpick pull requests');
+
+    return;
+  }
+
+  // Write matched comments to pull request
+  for (const comment of comments) {
+    const cannedTextIndex = comment.comment.body.lastIndexOf(
+      Constants.CannedTextSeparator
+    );
+
+    const body = `${comment.comment.body.substring(0, cannedTextIndex)}${
+      Constants.ResolvedText
+    }`;
+
+    await octokit.issues.updateComment({
+      repo: context.repo,
+      owner: context.owner,
+      comment_id: comment.comment.id,
+      body: body
+    });
+  }
+}
+
 export async function getExistingComments(
   octokit: github.GitHub
 ): Promise<PullRequestComment[]> {
