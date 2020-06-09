@@ -25,7 +25,7 @@ Add the Nitpicker action to your workflow and allow access to the `secrets.GITHU
 ```yaml
     steps:
       ...
-      - uses: mobile-actions/nitpicker@v1
+      - uses: ethanis/nitpicker@v1
         with:
           nitpicks: '.github/nitpicks.yml'
           token: '${{ secrets.GITHUB_TOKEN }}'
