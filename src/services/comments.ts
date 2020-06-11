@@ -161,7 +161,8 @@ function getCommentBody(
 ): string {
   return `${markdown}${Constants.CannedTextSeparator}${files
     .map(
-      m => `[${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`
+      m =>
+        ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`
     )
-    .join(', ')}`;
+    .join('\n')}`;
 }
