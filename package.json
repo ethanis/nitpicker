@@ -1,8 +1,8 @@
 {
-  "name": "typescript-action",
+  "name": "nitpicker",
   "version": "0.0.0",
   "private": true,
-  "description": "TypeScript template action",
+  "description": "Action to auto-comment",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/ethanis/nitpicker.git"
   },
   "keywords": [
     "actions",
     "node",
     "setup"
   ],
-  "author": "YourNameOrOrganization",
+  "author": "ethanis",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.4",
