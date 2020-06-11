@@ -1,5 +1,6 @@
 import * as github from '@actions/github';
 import * as core from '@actions/core';
+import * as crypto from 'crypto';
 import { Comment, PullRequestComment, MatchResult } from '../models';
 import { parseContext } from './context';
 import { Constants } from '../constants';
@@ -152,17 +153,26 @@ export async function getExistingComments(
     }));
 }
 
-function getCommentBody(
+export function getCommentBody(
   markdown: string,
   files: string[],
   prNumber: number,
   owner: string,
   repo: string
 ): string {
-  return `${markdown}${Constants.CannedTextSeparator}${files
+  // const hasher = crypto.createHash('md5');
+  const links = files.map(file => ({
+    text: file,
+    hash: crypto
+      .createHash('md5')
+      .update(file)
+      .digest('hex')
+  }));
+
+  return `${markdown}${Constants.CannedTextSeparator}${links
     .map(
-      m =>
-        ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`
+      link =>
+        ` - [${link.text}](https://github.com/${owner}/${repo}/pull/${prNumber}/files#diff-${link.hash})`
     )
     .join('\n')}`;
 }
