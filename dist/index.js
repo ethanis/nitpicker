@@ -3830,6 +3830,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
+const crypto = __importStar(__webpack_require__(373));
 const context_1 = __webpack_require__(973);
 const constants_1 = __webpack_require__(32);
 function writeComments(octokit, comments) {
@@ -3938,10 +3939,19 @@ function getExistingComments(octokit) {
 }
 exports.getExistingComments = getExistingComments;
 function getCommentBody(markdown, files, prNumber, owner, repo) {
-    return `${markdown}${constants_1.Constants.CannedTextSeparator}${files
-        .map(m => ` - [${m}](https://github.com/${owner}/${repo}/pull/${prNumber}/files)`)
+    // const hasher = crypto.createHash('md5');
+    const links = files.map(file => ({
+        text: file,
+        hash: crypto
+            .createHash('md5')
+            .update(file)
+            .digest('hex')
+    }));
+    return `${markdown}${constants_1.Constants.CannedTextSeparator}${links
+        .map(link => ` - [${link.text}](https://github.com/${owner}/${repo}/pull/${prNumber}/files#diff-${link.hash})`)
         .join('\n')}`;
 }
+exports.getCommentBody = getCommentBody;
 
 
 /***/ }),
@@ -5551,6 +5561,13 @@ function octokitDebug(octokit) {
   });
 }
 
+
+/***/ }),
+
+/***/ 373:
+/***/ (function(module) {
+
+module.exports = require("crypto");
 
 /***/ }),
 
