@@ -38,3 +38,72 @@ test('remove exclusion patterns', () => {
 
   expect(result).toEqual([]);
 });
+
+test('match new files only', () => {
+  const comment: Comment = {
+    pathFilter: ['+app/**'],
+    markdown: 'Only new files',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'app/models/old.rb',
+      changeType: ChangeType.edit
+    },
+    {
+      file: 'app/models/new.rb',
+      changeType: ChangeType.add
+    }
+  ];
+
+  const result = isCommentApplicable(comment, changes);
+
+  expect(result).toEqual(['app/models/new.rb']);
+});
+
+test('match deleted files only', () => {
+  const comment: Comment = {
+    pathFilter: ['-app/**'],
+    markdown: 'Only deleted files',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'app/models/old.rb',
+      changeType: ChangeType.edit
+    },
+    {
+      file: 'app/models/deleted.rb',
+      changeType: ChangeType.delete
+    }
+  ];
+
+  const result = isCommentApplicable(comment, changes);
+
+  expect(result).toEqual(['app/models/deleted.rb']);
+});
+
+test('match edited files only', () => {
+  const comment: Comment = {
+    pathFilter: ['~app/**'],
+    markdown: 'Only deleted files',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'app/models/old.rb',
+      changeType: ChangeType.edit
+    },
+    {
+      file: 'app/models/deleted.rb',
+      changeType: ChangeType.delete
+    }
+  ];
+
+  const result = isCommentApplicable(comment, changes);
+
+  expect(result).toEqual(['app/models/old.rb']);
+});
