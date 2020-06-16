@@ -1,4 +1,4 @@
-import { isCommentApplicable } from '../../src/services';
+import { getMatchingFilePaths } from '../../src/services';
 import { Comment, Change, ChangeType } from '../../src/models';
 
 test('match recursively', () => {
@@ -15,7 +15,7 @@ test('match recursively', () => {
     }
   ];
 
-  const result = isCommentApplicable(comment, changes);
+  const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual(changes.map(c => c.file));
 });
@@ -34,7 +34,7 @@ test('remove exclusion patterns', () => {
     }
   ];
 
-  const result = isCommentApplicable(comment, changes);
+  const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual([]);
 });
@@ -57,7 +57,7 @@ test('match new files only', () => {
     }
   ];
 
-  const result = isCommentApplicable(comment, changes);
+  const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual(['app/models/new.rb']);
 });
@@ -80,7 +80,7 @@ test('match deleted files only', () => {
     }
   ];
 
-  const result = isCommentApplicable(comment, changes);
+  const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual(['app/models/deleted.rb']);
 });
@@ -103,7 +103,7 @@ test('match edited files only', () => {
     }
   ];
 
-  const result = isCommentApplicable(comment, changes);
+  const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual(['app/models/old.rb']);
 });

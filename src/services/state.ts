@@ -33,7 +33,7 @@ export async function getTargetState(
   );
 
   for (const comment of allComments) {
-    const matches = isCommentApplicable(comment, changes);
+    const matches = getMatchingFilePaths(comment, changes);
     const isApplicable = matches.length > 0;
 
     const commentMatchText = `${comment.markdown}${Constants.CannedTextSeparator}`;
@@ -75,8 +75,7 @@ export async function getTargetState(
   };
 }
 
-// TODO: Rename
-export function isCommentApplicable(
+export function getMatchingFilePaths(
   comment: Comment,
   changes: Change[]
 ): string[] {
