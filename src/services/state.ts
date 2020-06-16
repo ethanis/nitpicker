@@ -12,6 +12,8 @@ import { getExistingComments } from '.';
 import { IOptions, Minimatch } from 'minimatch';
 import { Constants } from '../constants';
 
+const pathModifiers = ['!', '+', '-', '~'];
+
 export async function getTargetState(
   octokit: github.GitHub,
   allComments: Comment[],
@@ -33,7 +35,7 @@ export async function getTargetState(
   );
 
   for (const comment of allComments) {
-    const matches = isCommentApplicable(comment, changes);
+    const matches = getMatchingFilePaths(comment, changes);
     const isApplicable = matches.length > 0;
 
     const commentMatchText = `${comment.markdown}${Constants.CannedTextSeparator}`;
@@ -75,7 +77,10 @@ export async function getTargetState(
   };
 }
 
-function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
+export function getMatchingFilePaths(
+  comment: Comment,
+  changes: Change[]
+): string[] {
   const results: string[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
@@ -87,6 +92,10 @@ function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
       exclusions.push(pathFilter.substring(1));
     } else {
       inclusions.push(pathFilter);
+    }
+
+    if (pathModifiers.includes(pathFilter[1])) {
+      throw new Error('Multiple path modifiers are not supported');
     }
   }
 
@@ -149,7 +158,7 @@ function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
     }
 
     // Check if any exclusion should filter out the match
-    for (const exclusion in exclusions) {
+    for (const exclusion of exclusions) {
       // First exclusion to match will negate the inclusion match
       const matcher = new Minimatch(exclusion, options);
       const match = matcher.match(change.file);
