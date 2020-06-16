@@ -53,7 +53,7 @@ async function run() {
 
     if (targetState.conclusion !== 'success') {
       core.setFailed(
-        'Nitpicker has failed due to blocking comments being applied'
+        'nitpicker has failed due to blocking comments being applied'
       );
     }
   } catch (error) {
