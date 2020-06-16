@@ -12,6 +12,8 @@ import { getExistingComments } from '.';
 import { IOptions, Minimatch } from 'minimatch';
 import { Constants } from '../constants';
 
+const pathModifiers = ['!', '+', '-', '~'];
+
 export async function getTargetState(
   octokit: github.GitHub,
   allComments: Comment[],
@@ -90,6 +92,10 @@ export function getMatchingFilePaths(
       exclusions.push(pathFilter.substring(1));
     } else {
       inclusions.push(pathFilter);
+    }
+
+    if (pathModifiers.includes(pathFilter[1])) {
+      throw new Error('Multiple path modifiers are not supported');
     }
   }
 

@@ -1,6 +1,25 @@
 import { getMatchingFilePaths } from '../../src/services';
 import { Comment, Change, ChangeType } from '../../src/models';
 
+test('* matches everything', () => {
+  const comment: Comment = {
+    pathFilter: ['*'],
+    markdown: 'Woohoo!',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'app/models/foo.rb',
+      changeType: ChangeType.edit
+    }
+  ];
+
+  const result = getMatchingFilePaths(comment, changes);
+
+  expect(result).toEqual(changes.map(c => c.file));
+});
+
 test('match recursively', () => {
   const comment: Comment = {
     pathFilter: ['app/**'],
@@ -11,6 +30,25 @@ test('match recursively', () => {
   const changes: Change[] = [
     {
       file: 'app/models/foo.rb',
+      changeType: ChangeType.edit
+    }
+  ];
+
+  const result = getMatchingFilePaths(comment, changes);
+
+  expect(result).toEqual(changes.map(c => c.file));
+});
+
+test('ignore case', () => {
+  const comment: Comment = {
+    pathFilter: ['app/**'],
+    markdown: 'Woohoo!',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'APP/MODELS/FOO.rb',
       changeType: ChangeType.edit
     }
   ];
@@ -106,4 +144,23 @@ test('match edited files only', () => {
   const result = getMatchingFilePaths(comment, changes);
 
   expect(result).toEqual(['app/models/old.rb']);
+});
+
+test('disallow multiple modifiers', () => {
+  const comment: Comment = {
+    pathFilter: ['!~app/**'],
+    markdown: 'Not edited files',
+    blocking: false
+  };
+
+  const changes: Change[] = [
+    {
+      file: 'app/models/old.rb',
+      changeType: ChangeType.edit
+    }
+  ];
+
+  expect(() => getMatchingFilePaths(comment, changes)).toThrow(
+    'Multiple path modifiers are not supported'
+  );
 });
