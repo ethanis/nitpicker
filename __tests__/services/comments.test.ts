@@ -1,8 +1,6 @@
-import * as path from 'path';
 import { getCommentBody } from '../../src/services';
-import { Constants } from '../../src/constants';
 
-test('read valid config file', () => {
+test('link to md5 of filepath', () => {
   const markdown = 'markdown';
   const files = ['package.json', 'src/services/comments.ts'];
   const prNumber = 42;

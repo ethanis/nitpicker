@@ -75,7 +75,11 @@ export async function getTargetState(
   };
 }
 
-function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
+// TODO: Rename
+export function isCommentApplicable(
+  comment: Comment,
+  changes: Change[]
+): string[] {
   const results: string[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
@@ -149,7 +153,7 @@ function isCommentApplicable(comment: Comment, changes: Change[]): string[] {
     }
 
     // Check if any exclusion should filter out the match
-    for (const exclusion in exclusions) {
+    for (const exclusion of exclusions) {
       // First exclusion to match will negate the inclusion match
       const matcher = new Minimatch(exclusion, options);
       const match = matcher.match(change.file);
