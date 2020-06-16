@@ -33,7 +33,7 @@ Add the Nitpicker action to your workflow and allow access to the `secrets.GITHU
 
 ## Blocking comments
 
-A blocking comment indicates that a PR containing changed files that match a specified path filter will fail the build job that the nitpicker is run in. After the indicated file/folder has been removed from the PR, the blocking comment will be considered 'resolved' the build job will succeed and the PR can be completed.
+A blocking comment indicates that a PR containing changed files that match a specified path filter will fail the build job that the nitpicker is run in. After the indicated file/folder has been removed from the PR, the blocking comment will be considered 'resolved', the build job will succeed, and the PR can be completed.
 
 ## Common use-cases
 
