@@ -5,8 +5,6 @@ import {
   getChangedFiles,
   writeComments,
   getTargetState,
-  startCheck,
-  completeCheck,
   updateComments,
   resolveComments
 } from './services';
@@ -38,15 +36,11 @@ async function run() {
       return;
     }
 
-    const octokit = new github.GitHub(token, {
-      previews: ['squirrel-girl']
-    });
+    const octokit = new github.GitHub(token);
 
     const eventName = process.env.GITHUB_EVENT_NAME;
 
     console.log('starting check');
-
-    const checkRun = await startCheck(octokit);
 
     const changes: Change[] = await getChangedFiles(octokit, eventName);
     const targetState = await getTargetState(octokit, comments, changes);
@@ -57,7 +51,11 @@ async function run() {
       resolveComments(octokit, targetState.commentsToResolve)
     ]);
 
-    await completeCheck(octokit, checkRun.id, targetState.conclusion);
+    if (targetState.conclusion !== 'success') {
+      core.setFailed(
+        'Nitpicker has failed due to blocking comments being applied'
+      );
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
