@@ -17,9 +17,7 @@ test("pathFilter defaults to '*'", () => {
 
   const comments = getConfiguredComments(inputPath);
 
-  expect(
-    comments.every(c => c.pathFilter.every(p => p === '**/*'))
-  ).toBeTruthy();
+  expect(comments.every(c => c.pathFilter.every(p => p === '*'))).toBeTruthy();
 });
 
 test('contentFilter defaults to undefined', () => {

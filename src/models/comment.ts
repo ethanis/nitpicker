@@ -1,6 +1,6 @@
 export interface Comment {
   pathFilter: string[];
-  contentFilter: string[];
+  contentFilter?: string[];
   markdown: string;
   blocking: boolean;
 }
