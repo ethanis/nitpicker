@@ -194,5 +194,21 @@ export function getMatchingContentChanges(
     return changes;
   }
 
-  return [];
+  const matches: Change[] = [];
+
+  for (const change of changes) {
+    for (const contentFilter of comment.contentFilter) {
+      try {
+        const regex = new RegExp(contentFilter);
+        if (regex.test(change.patch)) {
+          matches.push(change);
+          break;
+        }
+      } catch (SyntaxError) {
+        throw Error(`Unable to parse regex expression: ${contentFilter}`);
+      }
+    }
+  }
+
+  return matches;
 }
