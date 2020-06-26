@@ -3,6 +3,6 @@
     Thanks for this contribution. We _really_ appreciate your help!
 
 - markdown: |
-    Don't add email addresses!
+    Properly escaped regexp
   contentFilter:
-    - '[\w-]+@([\w-]+\.)+[\w-]+'
+    - '(\+\s*console.log\(.*\))'

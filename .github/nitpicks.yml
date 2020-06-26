@@ -7,8 +7,8 @@
   pathFilter:
     - 'src/**'
   contentFilter:
-    - '(\\+\\s*console.log\\(.*\\))'
-    - '(\\+\\s*debugger)'
+    - '(\+\s*console.log\(.*\))'
+    - '(\+\s*debugger)'
 
 - markdown: |
     Please proofread any changes to documentation.
