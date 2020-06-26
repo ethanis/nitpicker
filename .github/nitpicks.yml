@@ -4,7 +4,7 @@
 
 - markdown: |
     Are you _sure_ you want to be console logging or debuggering here?? :trollface:
-  pathFilter: 'src/**'
+  # pathFilter: 'src/**'
   contentFilter:
     - '(\\+\\s*console.log\\(.*\\))'
     - '(\\+\\s*debugger)'
