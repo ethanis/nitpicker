@@ -9,7 +9,7 @@
     "test": "jest",
     "lint": "eslint . --ext .ts,.tsx --ignore-pattern node_modules/",
     "pack": "ncc build",
-    "all": "npm run build && npm run lint && npm run pack && npm test"
+    "all": "npm run lint && npm run build && npm test && npm run pack"
   },
   "repository": {
     "type": "git",
