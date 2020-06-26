@@ -207,6 +207,7 @@ export function getMatchingContentChanges(
       try {
         const regex = new RegExp(contentFilter);
         if (regex.test(change.patch)) {
+          core.debug(` matched contentFilter!`);
           matches.push(change);
           break;
         }
