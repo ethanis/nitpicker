@@ -5,7 +5,7 @@
 - markdown: |
     Are you _sure_ you want to be console logging or debuggering here?? :trollface:
   pathFilter: 'src/**'
-  contentFilter: 
+  contentFilter:
     - '(\\+\\s*console.log\\(.*\\))'
     - '(\\+\\s*debugger)'
 
@@ -14,8 +14,7 @@
   pathFilter:
     - '**/*.md'
 
-  - markdown: |
-    ## Uh oh
+- markdown: |
     Uhh... don't check in binaries here - we use GitHub package registry for that!
   blocking: true
   pathFilter:

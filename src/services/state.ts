@@ -196,6 +196,8 @@ export function getMatchingContentChanges(
 
   const matches: Change[] = [];
 
+  console.log('you found me!');
+
   for (const change of changes) {
     for (const contentFilter of comment.contentFilter) {
       try {
