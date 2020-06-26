@@ -199,7 +199,11 @@ export function getMatchingContentChanges(
   console.log('you found me!');
 
   for (const change of changes) {
+    core.debug(` checking file contents ${change.file}`);
+
     for (const contentFilter of comment.contentFilter) {
+      core.debug(` - ${contentFilter}`);
+
       try {
         const regex = new RegExp(contentFilter);
         if (regex.test(change.patch)) {
