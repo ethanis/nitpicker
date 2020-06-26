@@ -3,16 +3,36 @@ import { getConfiguredComments } from '../src/services';
 import { Constants } from '../src/constants';
 
 test('read valid config file', () => {
-  const configFile = './data/valid-nitpicks.yml';
+  const configFile = './data/valid_nitpicks.yml';
   const inputPath = path.join(__dirname, configFile);
 
   const comments = getConfiguredComments(inputPath);
 
-  expect(comments.length).toEqual(3);
+  expect(comments.length).toEqual(5);
+});
+
+test("pathFilter defaults to '*'", () => {
+  const configFile = './data/default_path_filter.yml';
+  const inputPath = path.join(__dirname, configFile);
+
+  const comments = getConfiguredComments(inputPath);
+
+  expect(
+    comments.every(c => c.pathFilter.every(p => p === '**/*'))
+  ).toBeTruthy();
+});
+
+test('contentFilter defaults to undefined', () => {
+  const configFile = './data/default_content_filter.yml';
+  const inputPath = path.join(__dirname, configFile);
+
+  const comments = getConfiguredComments(inputPath);
+
+  expect(comments.every(c => !c.contentFilter)).toBeTruthy();
 });
 
 test('read invalid config file', () => {
-  const configFile = './data/invalid-nitpicks.yml';
+  const configFile = './data/invalid_nitpicks.yml';
   const inputPath = path.join(__dirname, configFile);
 
   const comments = getConfiguredComments(inputPath);
@@ -21,7 +41,7 @@ test('read invalid config file', () => {
 });
 
 test('blocking comment text', () => {
-  const configFile = './data/blocking-nitpicks.yml';
+  const configFile = './data/blocking_nitpicks.yml';
   const inputPath = path.join(__dirname, configFile);
 
   const comments = getConfiguredComments(inputPath);

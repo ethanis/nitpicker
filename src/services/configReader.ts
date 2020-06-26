@@ -8,10 +8,11 @@ export function getConfiguredComments(filePath: string): Comment[] {
   const yaml: Comment[] = safeLoad(contents);
 
   const comments: Comment[] = yaml
-    .filter(y => y.markdown && y.pathFilter?.length > 0)
+    .filter(y => y.markdown)
     .map(c => ({
       ...c,
-      markdown: `${c.markdown}${c.blocking ? Constants.BlockingText : ''}`
+      markdown: `${c.markdown}${c.blocking ? Constants.BlockingText : ''}`,
+      pathFilter: c.pathFilter ?? Constants.DefaultPathFilter // Default to match everything
     }));
 
   return comments;
