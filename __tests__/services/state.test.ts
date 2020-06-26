@@ -11,7 +11,8 @@ test('* matches everything', () => {
   const changes: Change[] = [
     {
       file: 'app/models/foo.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     }
   ];
 
@@ -30,7 +31,8 @@ test('match recursively', () => {
   const changes: Change[] = [
     {
       file: 'app/models/foo.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     }
   ];
 
@@ -49,7 +51,8 @@ test('ignore case', () => {
   const changes: Change[] = [
     {
       file: 'APP/MODELS/FOO.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     }
   ];
 
@@ -68,7 +71,8 @@ test('remove exclusion patterns', () => {
   const changes: Change[] = [
     {
       file: 'app/models/main.h',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     }
   ];
 
@@ -87,11 +91,13 @@ test('match new files only', () => {
   const changes: Change[] = [
     {
       file: 'app/models/old.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     },
     {
       file: 'app/models/new.rb',
-      changeType: ChangeType.add
+      changeType: ChangeType.add,
+      patch: ''
     }
   ];
 
@@ -110,11 +116,13 @@ test('match deleted files only', () => {
   const changes: Change[] = [
     {
       file: 'app/models/old.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     },
     {
       file: 'app/models/deleted.rb',
-      changeType: ChangeType.delete
+      changeType: ChangeType.delete,
+      patch: ''
     }
   ];
 
@@ -133,11 +141,13 @@ test('match edited files only', () => {
   const changes: Change[] = [
     {
       file: 'app/models/old.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     },
     {
       file: 'app/models/deleted.rb',
-      changeType: ChangeType.delete
+      changeType: ChangeType.delete,
+      patch: ''
     }
   ];
 
@@ -156,7 +166,8 @@ test('disallow multiple modifiers', () => {
   const changes: Change[] = [
     {
       file: 'app/models/old.rb',
-      changeType: ChangeType.edit
+      changeType: ChangeType.edit,
+      patch: ''
     }
   ];
 
