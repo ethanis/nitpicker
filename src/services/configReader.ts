@@ -4,14 +4,19 @@ import { safeLoad } from 'js-yaml';
 import { Constants } from '../constants';
 
 export function getConfiguredComments(filePath: string): Comment[] {
+  if (!fs.existsSync(filePath)) {
+    throw Error(`Nitpicks file does not exist: ${filePath}`);
+  }
+
   const contents = fs.readFileSync(filePath, 'utf8');
   const yaml: Comment[] = safeLoad(contents);
 
   const comments: Comment[] = yaml
-    .filter(y => y.markdown && y.pathFilter?.length > 0)
+    .filter(y => y.markdown)
     .map(c => ({
       ...c,
-      markdown: `${c.markdown}${c.blocking ? Constants.BlockingText : ''}`
+      markdown: `${c.markdown}${c.blocking ? Constants.BlockingText : ''}`,
+      pathFilter: c.pathFilter ?? Constants.DefaultPathFilter // Default to match everything
     }));
 
   return comments;

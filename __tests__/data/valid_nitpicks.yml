@@ -1,0 +1,30 @@
+# Test that pathFilter alone works
+- markdown: |
+    ## Notice
+    Thanks for this contribution. We _really_ appreciate your help!
+  pathFilter:
+    - '**'
+# blocking is a valid option
+- markdown: |
+    ## Blocking issue
+    We no longer check in binaries to this repo - our new convention is to use NuGet packages.
+
+    Read more about this change [here](https://www.nuget.org/).
+  blocking: true
+  pathFilter:
+    - '**/*.dll'
+# Path filter should default to *
+- markdown: |
+    Apply to everything
+# Test that contentFilter is a valid option
+- markdown: |
+    Don't add email addresses!
+  contentFilter:
+    - '[\w-]+@([\w-]+\.)+[\w-]+'
+# Kitchen sink
+- markdown: |
+    Oops - looks like you added a `puts` statement
+  pathFilter:
+    - app/**/*.rb
+  contentFilter:
+    - '(puts\W+)'

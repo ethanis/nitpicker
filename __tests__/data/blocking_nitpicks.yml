@@ -1,5 +1,5 @@
 - markdown: |
-    This is a blcoking comment
+    This is a blocking comment
   blocking: true
   pathFilter:
     - '**/*.dll'

@@ -1,0 +1,8 @@
+- markdown: |
+    ## Notice
+    Thanks for this contribution. We _really_ appreciate your help!
+
+- markdown: |
+    Properly escaped regexp
+  contentFilter:
+    - '(\+\s*console.log\(.*\))'

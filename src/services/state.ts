@@ -35,7 +35,10 @@ export async function getTargetState(
   );
 
   for (const comment of allComments) {
-    const matches = getMatchingFilePaths(comment, changes);
+    const matchedFiles = getMatchingFilePaths(comment, changes);
+    const matchedContent = getMatchingContentChanges(comment, matchedFiles);
+    const matches = matchedContent.map(m => m.file);
+
     const isApplicable = matches.length > 0;
 
     const commentMatchText = `${comment.markdown}${Constants.CannedTextSeparator}`;
@@ -80,8 +83,8 @@ export async function getTargetState(
 export function getMatchingFilePaths(
   comment: Comment,
   changes: Change[]
-): string[] {
-  const results: string[] = [];
+): Change[] {
+  const results: Change[] = [];
   const options: IOptions = { dot: true, nocase: true };
 
   const inclusions: string[] = [];
@@ -175,9 +178,42 @@ export function getMatchingFilePaths(
 
     // If we've made it this far, comment is good to go
     if (isMatch) {
-      results.push(change.file);
+      results.push(change);
     }
   }
 
   return results;
+}
+
+export function getMatchingContentChanges(
+  comment: Comment,
+  changes: Change[]
+): Change[] {
+  // if contentFilter isn't defined, return everything
+  if (!comment.contentFilter) {
+    return changes;
+  }
+
+  const matches: Change[] = [];
+
+  for (const change of changes) {
+    core.debug(` checking file contents ${change.file}`);
+
+    for (const contentFilter of comment.contentFilter) {
+      core.debug(` - ${contentFilter}`);
+
+      try {
+        const regex = new RegExp(contentFilter);
+        if (regex.test(change.patch)) {
+          core.debug(` matched contentFilter!`);
+          matches.push(change);
+          break;
+        }
+      } catch (SyntaxError) {
+        throw Error(`Unable to parse regex expression: ${contentFilter}`);
+      }
+    }
+  }
+
+  return matches;
 }

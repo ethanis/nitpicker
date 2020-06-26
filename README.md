@@ -10,14 +10,21 @@ Add a new YAML file that specifies the comments to be evaluated during PRs. We r
 - markdown: |
     ## Rockstar alert
     Thanks for this contribution, we _really_ appreciate your help :heart:!
-  pathFilter:
-    - '*'
+
 - markdown: |
     ## Uh oh
     Don't check in binaries...we use GitHub Packages for those!
   blocking: true
   pathFilter:
     - '+**/*.dll'
+
+- markdown: |
+    Are you _sure_ you want to be console logging or debuggering here?? :trollface:
+  pathFilter:
+    - 'src/**'
+  contentFilter:
+    - '(\+\s*console.log\(.*\))'
+    - '(\+\s*debugger)'
 ```
 
 Add the Nitpicker action to your workflow and allow access to the `secrets.GITHUB_TOKEN` variable.
@@ -69,6 +76,8 @@ In order for this PR to be completed, the author of the PR should address any co
 
 Path filters define which comments to add to a PR based on the set of files changed. These can either be explicit file paths or a file path pattern. If you want to add multiple path filters to a comment, they must be separated with a `,` or `;`. Comments will only be added to a PR if it changes files that match the path filter.
 
+If no value for `pathFilter` is specified, `*`, is used. This effectively means any file path will match the comment.
+
 Paths prefixed with `!` are excluded. For example, `!tests/**` will exclude files changed within the `tests/` directory.
 
 Paths prefixed with `+` indicate only _new_ files will match. For example, `+depot/*.dll` will match when a file with the file extension `.dll` is added to the `depot/` directory but would not match when an existing `.dll` is edited or deleted in the `depot/` directory.
@@ -76,6 +85,23 @@ Paths prefixed with `+` indicate only _new_ files will match. For example, `+dep
 Paths prefixed with `-` indicate only _removed_ files will match. For example, `-docs/*.md` will match when a file with the file extension `.md` is deleted from the `docs/` directory, but would not match when a `.md` file is added or edited in the `docs/` directory.
 
 Paths prefixed with `~` indicate only _edited_ files will match. For example, `~sources/*.nupkg` will match when an existing file with the file extension `.nupkg` is edited in the `sources/` directory, but would not match when a `.nugpkg` file is added or deleted in the `sources/` directory.
+
+## Content filters
+
+Content filters define which comments to add based on the `patch` of the files changed.
+
+A comment's `contentFilter` parameter accepts an array of regular expressions that are used to match comments based on the changes to a file in a PR. These can be used in combination with path filters to create complex comment rules. For example, this rule will match any typescript file in the `src` directory, except `src/models/debug.ts`, that add a `console.log` or `debugger` statement.
+
+```yaml
+- markdown: |
+    Did you _really_ mean to commit this debug statement??
+  pathFilter:
+    - 'src/**/*.ts'
+    - '!src/models/debug.ts'
+  contentFilter:
+    - '(\+\s*console.log\(.*\))'
+    - '(\+\s*debugger)'
+```
 
 ## Development
 

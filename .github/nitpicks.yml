@@ -1,15 +1,22 @@
 - markdown: |
     ## Rockstar alert
     Thanks for this contribution, we _really_ appreciate your help :heart:!
+
+- markdown: |
+    Are you _sure_ you want to be console logging or debuggering here?? :trollface:
   pathFilter:
-    - '*'
+    - 'src/**'
+  contentFilter:
+    - '(\+\s*console.log\(.*\))'
+    - '(\+\s*debugger)'
+
 - markdown: |
     Please proofread any changes to documentation.
   pathFilter:
     - '**/*.md'
+
 - markdown: |
-    ## Uh oh
-    Don't check in binaries...we use GitHub package registry for that!
+    Uhh... don't check in binaries here - we use GitHub package registry for that!
   blocking: true
   pathFilter:
     - '+**/*.dll'

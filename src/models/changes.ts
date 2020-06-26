@@ -8,4 +8,5 @@ export enum ChangeType {
 export interface Change {
   file: string;
   changeType: ChangeType;
+  patch: string;
 }

@@ -28,16 +28,18 @@ async function getChangesFromSha(octokit: github.GitHub): Promise<Change[]> {
     return [];
   }
 
-  const listFilesResponse = await octokit.repos.compareCommits({
+  const changedFiles = await octokit.repos.compareCommits({
     owner: owner,
     repo: repo,
     base: beforeSha,
-    head: afterSha
+    head: afterSha,
+    mediaType: { format: 'sha' }
   });
 
-  const changes = listFilesResponse.data.files.map(f => ({
+  const changes: Change[] = changedFiles.data.files.map(f => ({
     file: f.filename,
-    changeType: parseStatus(f.status)
+    changeType: parseStatus(f.status),
+    patch: f.patch
   }));
 
   core.debug('found changed files:');
@@ -62,7 +64,8 @@ async function getChangesFromPR(octokit: github.GitHub): Promise<Change[]> {
 
   const changes = listFilesResponse.data.map(f => ({
     file: f.filename,
-    changeType: parseStatus(f.status)
+    changeType: parseStatus(f.status),
+    patch: f.patch
   }));
 
   core.debug('found changed files:');
