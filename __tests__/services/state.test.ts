@@ -1,7 +1,7 @@
 import { getMatchingFilePaths } from '../../src/services';
 import { Comment, Change, ChangeType } from '../../src/models';
 
-test('* matches everything', () => {
+test('pathFilter * matches everything', () => {
   const comment: Comment = {
     pathFilter: ['*'],
     markdown: 'Woohoo!',
@@ -18,10 +18,10 @@ test('* matches everything', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(changes.map(c => c.file));
+  expect(result).toEqual(changes);
 });
 
-test('match recursively', () => {
+test('pathFilter matches recursively', () => {
   const comment: Comment = {
     pathFilter: ['app/**'],
     markdown: 'Woohoo!',
@@ -38,10 +38,10 @@ test('match recursively', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(changes.map(c => c.file));
+  expect(result).toEqual(changes);
 });
 
-test('ignore case', () => {
+test('pathFilter ignores case', () => {
   const comment: Comment = {
     pathFilter: ['app/**'],
     markdown: 'Woohoo!',
@@ -58,10 +58,10 @@ test('ignore case', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(changes.map(c => c.file));
+  expect(result).toEqual(changes);
 });
 
-test('remove exclusion patterns', () => {
+test('pathFilter removes exclusion patterns', () => {
   const comment: Comment = {
     pathFilter: ['app/**', '!app/models/*.h'],
     markdown: 'Everything except headers',
@@ -78,10 +78,10 @@ test('remove exclusion patterns', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual([]);
+  expect(result).toHaveLength(0);
 });
 
-test('match new files only', () => {
+test('pathFilter can match new files only', () => {
   const comment: Comment = {
     pathFilter: ['+app/**'],
     markdown: 'Only new files',
@@ -103,10 +103,10 @@ test('match new files only', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(['app/models/new.rb']);
+  expect(result).toEqual(changes.filter(c => c.changeType === ChangeType.add));
 });
 
-test('match deleted files only', () => {
+test('pathFilter can match deleted files only', () => {
   const comment: Comment = {
     pathFilter: ['-app/**'],
     markdown: 'Only deleted files',
@@ -128,10 +128,12 @@ test('match deleted files only', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(['app/models/deleted.rb']);
+  expect(result).toEqual(
+    changes.filter(c => c.changeType === ChangeType.delete)
+  );
 });
 
-test('match edited files only', () => {
+test('pathFilter can match edited files only', () => {
   const comment: Comment = {
     pathFilter: ['~app/**'],
     markdown: 'Only deleted files',
@@ -153,10 +155,10 @@ test('match edited files only', () => {
 
   const result = getMatchingFilePaths(comment, changes);
 
-  expect(result).toEqual(['app/models/old.rb']);
+  expect(result).toEqual(changes.filter(c => c.changeType === ChangeType.edit));
 });
 
-test('disallow multiple modifiers', () => {
+test('pathFilter disallows multiple modifiers', () => {
   const comment: Comment = {
     pathFilter: ['!~app/**'],
     markdown: 'Not edited files',
