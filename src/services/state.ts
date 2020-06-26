@@ -196,8 +196,6 @@ export function getMatchingContentChanges(
 
   const matches: Change[] = [];
 
-  console.log('you found me!');
-
   for (const change of changes) {
     core.debug(` checking file contents ${change.file}`);
 
@@ -206,7 +204,6 @@ export function getMatchingContentChanges(
 
       try {
         const regex = new RegExp(contentFilter);
-        core.debug('patch' + change.patch);
         if (regex.test(change.patch)) {
           core.debug(` matched contentFilter!`);
           matches.push(change);
