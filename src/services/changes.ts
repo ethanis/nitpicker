@@ -36,7 +36,7 @@ async function getChangesFromSha(octokit: github.GitHub): Promise<Change[]> {
     mediaType: { format: 'diff' }
   });
 
-  console.log(changedFiles.data);
+  core.debug(JSON.stringify(changedFiles));
 
   const changes = changedFiles.data.files.map(f => ({
     file: f.filename,
