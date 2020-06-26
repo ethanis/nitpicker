@@ -53,3 +53,12 @@ test('blocking comment text', () => {
     }
   }
 });
+
+test('file doesnt exist', () => {
+  const configFile = './data/foo_bar.yml';
+  const inputPath = path.join(__dirname, configFile);
+
+  expect(() => getConfiguredComments(inputPath)).toThrowError(
+    'Nitpicks file does not exist: '
+  );
+});
