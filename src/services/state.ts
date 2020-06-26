@@ -9,7 +9,7 @@ import {
   Comment
 } from '../models';
 import { getExistingComments } from '.';
-import { IOptions, Minimatch, match } from 'minimatch';
+import { IOptions, Minimatch } from 'minimatch';
 import { Constants } from '../constants';
 
 const pathModifiers = ['!', '+', '-', '~'];
