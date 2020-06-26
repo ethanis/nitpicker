@@ -1,8 +1,6 @@
 - markdown: |
     ## Rockstar alert
     Thanks for this contribution, we _really_ appreciate your help :heart:!
-  pathFilter:
-    - '*'
 - markdown: |
     Please proofread any changes to documentation.
   pathFilter:
