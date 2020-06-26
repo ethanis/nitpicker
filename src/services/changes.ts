@@ -28,14 +28,17 @@ async function getChangesFromSha(octokit: github.GitHub): Promise<Change[]> {
     return [];
   }
 
-  const listFilesResponse = await octokit.repos.compareCommits({
+  const changedFiles = await octokit.repos.compareCommits({
     owner: owner,
     repo: repo,
     base: beforeSha,
-    head: afterSha
+    head: afterSha,
+    mediaType: { format: 'diff' }
   });
 
-  const changes = listFilesResponse.data.files.map(f => ({
+  console.log(changedFiles.data);
+
+  const changes = changedFiles.data.files.map(f => ({
     file: f.filename,
     changeType: parseStatus(f.status)
   }));

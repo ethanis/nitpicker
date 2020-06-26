@@ -37,10 +37,7 @@ async function run() {
     }
 
     const octokit = new github.GitHub(token);
-
     const eventName = process.env.GITHUB_EVENT_NAME;
-
-    console.log('starting check');
 
     const changes: Change[] = await getChangedFiles(octokit, eventName);
     const targetState = await getTargetState(octokit, comments, changes);
