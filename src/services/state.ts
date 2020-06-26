@@ -206,6 +206,7 @@ export function getMatchingContentChanges(
 
       try {
         const regex = new RegExp(contentFilter);
+        core.debug('patch' + change.patch);
         if (regex.test(change.patch)) {
           core.debug(` matched contentFilter!`);
           matches.push(change);
