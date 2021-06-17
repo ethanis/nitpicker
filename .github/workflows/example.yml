@@ -19,3 +19,4 @@ jobs:
         with:
           nitpicks: './.github/nitpicks.yml'
           token: '${{ secrets.GITHUB_TOKEN }}'
+          if: '!always()'
