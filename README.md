@@ -103,6 +103,17 @@ A comment's `contentFilter` parameter accepts an array of regular expressions th
     - '(\+\s*debugger)'
 ```
 
+If you would like nitpicker to only post a comment when the regular expression is _not_ found, you can use a `!` in front of the contentFilter. For example:
+
+```yaml
+- markdown: |
+    Please ensure that all .ts files include the word 'unicorn!'
+  pathFilter:
+    - 'src/**/*.ts'
+  contentFilter:
+    - '!(unicorn)'
+```
+
 ## Development
 
 Install the dependencies
