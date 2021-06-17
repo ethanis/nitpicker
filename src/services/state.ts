@@ -204,17 +204,20 @@ export function getMatchingContentChanges(
 
       let negation = false;
       try {
-        if (contentFilter[0] == '!') negation = true;
-
-        const regex = new RegExp(contentFilter);
-        if (regex.test(change.patch) && !negation) {
-          core.debug(` matched contentFilter!`);
-          matches.push(change);
-          break;
-        } else if (!regex.test(change.patch) && negation) {
-          core.debug(` matched contentFilter!`);
-          matches.push(change);
-          break;
+        if (contentFilter[0] == '!') {
+          const regex = new RegExp(contentFilter.substring(1));
+          if (!regex.test(change.patch)) {
+            core.debug(` matched contentFilter!`);
+            matches.push(change);
+            break;
+          }
+        } else {
+          const regex = new RegExp(contentFilter);
+          if (regex.test(change.patch)) {
+            core.debug(` matched contentFilter!`);
+            matches.push(change);
+            break;
+          }
         }
       } catch (SyntaxError) {
         throw Error(`Unable to parse regex expression: ${contentFilter}`);
