@@ -1,0 +1,21 @@
+name: Build
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - 'releases/*'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - run: npm ci
+      - run: npm run all
+      - name: nitpicker
+        uses: ./
+        with:
+          nitpicks: './.github/nitpicks.yml'
+          token: '${{ secrets.GITHUB_TOKEN }}'

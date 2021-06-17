@@ -20,3 +20,10 @@
   blocking: true
   pathFilter:
     - '+**/*.dll'
+
+- markdown: |
+    Testing - fail if the file doesn't include "always()"
+  pathFilter:
+    - '.github/workflows/example.yml'
+  contentFilter:
+    - '!always()'
