@@ -202,9 +202,9 @@ export function getMatchingContentChanges(
     for (const contentFilter of comment.contentFilter) {
       core.debug(` - ${contentFilter}`);
 
-      let negation = false
+      let negation = false;
       try {
-        if (contentFilter[0] == "!") negation = true 
+        if (contentFilter[0] == '!') negation = true 
 
         const regex = new RegExp(contentFilter);
         if (regex.test(change.patch) && !negation) {
@@ -212,6 +212,7 @@ export function getMatchingContentChanges(
           matches.push(change);
           break;
         }
+        
         else if (!regex.test(change.patch) && negation) {
           core.debug(` matched contentFilter!`);
           matches.push(change);
