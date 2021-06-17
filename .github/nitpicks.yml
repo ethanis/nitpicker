@@ -26,4 +26,4 @@
   pathFilter:
     - '.github/workflows/example.yml'
   contentFilter:
-    - '!always()'
+    - '!(!always())'
