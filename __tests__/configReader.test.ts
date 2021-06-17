@@ -29,15 +29,6 @@ test('contentFilter defaults to undefined', () => {
   expect(comments.every(c => !c.contentFilter)).toBeTruthy();
 });
 
-test('contentFilter is negated', () => {
-  const configFile = './data/default_content_filter.yml';
-  const inputPath = path.join(__dirname, configFile);
-
-  const comments = getConfiguredComments(inputPath);
-
-  expect(comments.every(c => !c.contentFilter)).toBeTruthy();
-});
-
 test('read invalid config file', () => {
   const configFile = './data/invalid_nitpicks.yml';
   const inputPath = path.join(__dirname, configFile);
