@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ethanis/nitpicker.git"
+    "url": "git+https://github.com/mvsgodinho/nitpicker.git"
   },
   "keywords": [
     "actions",
     "node",
     "setup"
   ],
-  "author": "ethanis",
+  "author": "mvsgodinho",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.6",
