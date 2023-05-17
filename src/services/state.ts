@@ -202,12 +202,22 @@ export function getMatchingContentChanges(
     for (const contentFilter of comment.contentFilter) {
       core.debug(` - ${contentFilter}`);
 
+      let negation = false;
       try {
-        const regex = new RegExp(contentFilter);
-        if (regex.test(change.patch)) {
-          core.debug(` matched contentFilter!`);
-          matches.push(change);
-          break;
+        if (contentFilter[0] == '!') {
+          const regex = new RegExp(contentFilter.substring(1));
+          if (!regex.test(change.patch)) {
+            core.debug(` matched contentFilter!`);
+            matches.push(change);
+            break;
+          }
+        } else {
+          const regex = new RegExp(contentFilter);
+          if (regex.test(change.patch)) {
+            core.debug(` matched contentFilter!`);
+            matches.push(change);
+            break;
+          }
         }
       } catch (SyntaxError) {
         throw Error(`Unable to parse regex expression: ${contentFilter}`);
