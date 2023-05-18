@@ -56,13 +56,15 @@ async function getChangesFromPR(octokit: github.GitHub): Promise<Change[]> {
     return [];
   }
 
-  const listFilesResponse = await octokit.pulls.listFiles({
-    owner: github.context.repo.owner,
-    repo: github.context.repo.repo,
-    pull_number: pullRequest.number
-  });
+  const listFilesResponse = await octokit.paginate(
+    octokit.pulls.listFiles.endpoint.merge({
+      owner: github.context.repo.owner,
+      repo: github.context.repo.repo,
+      pull_number: pullRequest.number
+    })
+  );
 
-  const changes = listFilesResponse.data.map(f => ({
+  const changes = listFilesResponse.map(f => ({
     file: f.filename,
     changeType: parseStatus(f.status),
     patch: f.patch
